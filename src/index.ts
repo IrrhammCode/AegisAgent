@@ -1,76 +1,246 @@
-import { classifyDataWithImpulse } from './intelligence';
-import { generateIntegrityProof } from './zk_proof';
-import { uploadToPermanentStorage } from './irys_storage';
-import { registerAgentIdentity } from './identity';
-import { issueImpactReceipt } from './impact';
+/**
+ * ╔══════════════════════════════════════════════════════════════╗
+ * ║  AEGIS: Autonomous ZK-Sentinel — Unified Orchestrator       ║
+ * ║  The core 5-stage pipeline called by the Python brain.      ║
+ * ║                                                              ║
+ * ║  Stage 1: Intelligence   → Impulse AI Classification        ║
+ * ║  Stage 2: Privacy        → Noir ZK-Integrity Proof          ║
+ * ║  Stage 3: Infrastructure → Arweave/Irys Permanent Storage   ║
+ * ║  Stage 4: Identity       → ERC-8004 Agent Registration      ║
+ * ║  Stage 5: Impact         → Hypercerts Impact Receipt        ║
+ * ╚══════════════════════════════════════════════════════════════╝
+ */
+
 import * as fs from 'fs';
 import * as path from 'path';
+import { classifyDataWithImpulse, ClassificationResult } from './intelligence';
+import { generateIntegrityProof, ZKProofResult } from './zk_proof';
+import { uploadToPermanentStorage, uploadDataToPermanentStorage, ArchivalResult } from './irys_storage';
+import { registerAgentIdentity, AgentIdentity } from './identity';
+import { issueImpactReceipt, ImpactReceipt } from './impact';
+import { sha256File } from './utils/crypto';
+import { logInfo, logError, logWarn } from './utils/logger';
 
-/**
- * AEGIS: Autonomous ZK-Sentinel Unified Orchestrator
- * ==================================================
- * The core logic called by the Python autonomous brain.
- */
+const MODULE = 'Orchestrator';
+
+// ─── Types ───────────────────────────────────────────────────
+
+export interface PipelineResult {
+    status: 'SUCCESS' | 'SKIPPED' | 'ERROR';
+    message: string;
+    stages: {
+        intelligence: ClassificationResult | null;
+        zkProof: ZKProofResult | null;
+        archival: ArchivalResult | null;
+        identity: AgentIdentity | null;
+        impact: ImpactReceipt | null;
+    };
+    executionTimeMs: number;
+    timestamp: string;
+}
+
+// ─── Pipeline Execution ──────────────────────────────────────
+
+async function runProtectionPipeline(filePath: string): Promise<PipelineResult> {
+    const startTime = Date.now();
+    const fileName = path.basename(filePath);
+
+    const stages: PipelineResult['stages'] = {
+        intelligence: null,
+        zkProof: null,
+        archival: null,
+        identity: null,
+        impact: null
+    };
+
+    try {
+        // ═══════════════════════════════════════════════
+        // STAGE 1: INTELLIGENCE (Impulse AI)
+        // ═══════════════════════════════════════════════
+        console.log('\n┌─── Stage 1: Intelligence (Impulse AI) ───┐');
+        const classification = await classifyDataWithImpulse(filePath);
+        stages.intelligence = classification;
+
+        if (!classification.isSensitive) {
+            console.log('└─── Result: SAFE — No protection needed ──┘\n');
+            return {
+                status: 'SKIPPED',
+                message: `Data classified as ${classification.category}. No protection needed.`,
+                stages,
+                executionTimeMs: Date.now() - startTime,
+                timestamp: new Date().toISOString()
+            };
+        }
+
+        console.log(`└─── Sensitive! Category: ${classification.category} (${(classification.confidence * 100).toFixed(1)}%) ──┘\n`);
+
+        // ═══════════════════════════════════════════════
+        // STAGE 2: PRIVACY (Noir ZK-Proof)
+        // ═══════════════════════════════════════════════
+        console.log('┌─── Stage 2: Privacy (Noir ZK-Proof) ──────┐');
+        const proof = await generateIntegrityProof(filePath, 'file');
+        stages.zkProof = proof;
+        console.log(`└─── Proof: ${proof.verified ? 'VERIFIED' : 'UNVERIFIED'} (${proof.generationTimeMs}ms) ──┘\n`);
+
+        // ═══════════════════════════════════════════════
+        // STAGE 3: INFRASTRUCTURE (Arweave/Irys)
+        // ═══════════════════════════════════════════════
+        console.log('┌─── Stage 3: Infrastructure (Irys/Arweave) ┐');
+
+        // Upload the data file
+        const dataArchival = await uploadToPermanentStorage(filePath, [
+            { name: 'Aegis-Category', value: classification.category },
+            { name: 'Aegis-Confidence', value: classification.confidence.toString() },
+            { name: 'ZK-Proof-Hash', value: proof.publicInputs.dataHash.slice(0, 32) },
+            { name: 'ZK-Circuit', value: proof.publicInputs.circuitId }
+        ]);
+        stages.archival = dataArchival;
+
+        // Also archive the ZK proof alongside
+        await uploadDataToPermanentStorage(
+            JSON.stringify({
+                proof: proof.proof.slice(0, 128) + '...', // Truncated for storage
+                publicInputs: proof.publicInputs,
+                verified: proof.verified
+            }),
+            [
+                { name: 'Content-Type', value: 'application/json' },
+                { name: 'Aegis-Type', value: 'zk-proof-receipt' },
+                { name: 'Parent-TX', value: dataArchival.transactionId }
+            ]
+        );
+
+        console.log(`└─── Archived: ${dataArchival.permanentUrl} ──┘\n`);
+
+        // ═══════════════════════════════════════════════
+        // STAGE 4: IDENTITY (ERC-8004)
+        // ═══════════════════════════════════════════════
+        console.log('┌─── Stage 4: Identity (ERC-8004) ──────────┐');
+        const identity = await registerAgentIdentity(dataArchival.permanentUrl);
+        stages.identity = identity;
+        console.log(`└─── Agent ID: ${identity.agentId} ──┘\n`);
+
+        // ═══════════════════════════════════════════════
+        // STAGE 5: IMPACT (Hypercerts)
+        // ═══════════════════════════════════════════════
+        console.log('┌─── Stage 5: Impact (Hypercerts) ──────────┐');
+        const impact = await issueImpactReceipt(
+            identity.agentId,
+            dataArchival.permanentUrl,
+            classification.category
+        );
+        stages.impact = impact;
+        console.log(`└─── Impact Receipt: ${impact.claimId} ──┘\n`);
+
+        // ═══════════════════════════════════════════════
+        // COMPLETE
+        // ═══════════════════════════════════════════════
+        const executionTimeMs = Date.now() - startTime;
+
+        return {
+            status: 'SUCCESS',
+            message: `Protected ${fileName}: ${classification.category} → ZK-Proved → Archived → Verified → Impact Issued`,
+            stages,
+            executionTimeMs,
+            timestamp: new Date().toISOString()
+        };
+
+    } catch (error: any) {
+        logError(MODULE, `Pipeline error: ${error.message}`);
+        return {
+            status: 'ERROR',
+            message: error.message,
+            stages,
+            executionTimeMs: Date.now() - startTime,
+            timestamp: new Date().toISOString()
+        };
+    }
+}
+
+// ─── Main Entry Point ────────────────────────────────────────
+
 async function main() {
     const args = process.argv.slice(2);
+
     if (args.length < 2) {
-        console.error("Usage: ts-node src/index.ts <TASK_TYPE> <FILE_PATH>");
+        console.error('Usage: ts-node src/index.ts <TASK_TYPE> <FILE_PATH>');
+        console.error('');
+        console.error('Task Types:');
+        console.error('  PROTECT_ASSET    Run the full 5-stage protection pipeline');
+        console.error('  CLASSIFY_ONLY    Run only Stage 1 (Intelligence)');
+        console.error('  PROVE_ONLY       Run only Stage 2 (ZK-Proof)');
         process.exit(1);
     }
 
     const [taskType, filePath] = args;
 
-    try {
-        console.log(`\n=================================================`);
-        console.log(`🛡️  AEGIS CORE: ${taskType}`);
-        console.log(`📂  Target: ${path.basename(filePath)}`);
-        console.log(`=================================================\n`);
+    console.log('');
+    console.log('╔══════════════════════════════════════════════╗');
+    console.log('║    🛡️  AEGIS ZK-SENTINEL CORE ENGINE         ║');
+    console.log(`║    Task: ${taskType.padEnd(36)}║`);
+    console.log(`║    File: ${path.basename(filePath).padEnd(36)}║`);
+    console.log('╚══════════════════════════════════════════════╝');
 
-        // --- STAGE 1: INTELLIGENCE ---
-        const classification = await classifyDataWithImpulse(filePath);
-        if (!classification.isSensitive) {
-            console.log(`[Core] Impulse AI result: Normal data. No security archival needed.`);
-            process.exit(0);
-        }
-        console.log(`[Core] Intelligence Recommendation: ${classification.recommendation}`);
+    // Validate file exists
+    if (!fs.existsSync(filePath)) {
+        const errorResult = { status: 'ERROR', message: `File not found: ${filePath}` };
+        console.log(`__AEGIS_RESULT__:${JSON.stringify(errorResult)}`);
+        process.exit(1);
+    }
 
-        // --- STAGE 2: PRIVACY (Noir ZK) ---
-        console.log(`[Core] Generating ZK-Integrity Proof...`);
-        const fileContent = fs.readFileSync(filePath, 'utf-8');
-        const proof = await generateIntegrityProof(fileContent, "hash_dummy");
+    let result: any;
 
-        // --- STAGE 3: INFRASTRUCTURE (Irys) ---
-        console.log(`[Core] Committing to Arweave (Permanent Storage)...`);
-        const url = await uploadToPermanentStorage(filePath, [
-            { name: "App-Name", value: "Aegis-Sentinel" },
-            { name: "Content-Category", value: classification.category },
-            { name: "ZK-Proof", value: proof }
-        ]);
+    switch (taskType) {
+        case 'PROTECT_ASSET':
+            result = await runProtectionPipeline(filePath);
+            break;
 
-        // --- STAGE 4: IDENTITY (ERC-8004) ---
-        const agentID = await registerAgentIdentity("https://aegis-agent.com/manifest.json");
+        case 'CLASSIFY_ONLY':
+            const classification = await classifyDataWithImpulse(filePath);
+            result = { status: 'SUCCESS', classification };
+            break;
 
-        // --- STAGE 5: IMPACT (Hypercerts) ---
-        const impactToken = await issueImpactReceipt(agentID, url, classification.category);
+        case 'PROVE_ONLY':
+            const proof = await generateIntegrityProof(filePath, 'file');
+            result = { status: 'SUCCESS', proof };
+            break;
 
-        // --- OUTPUT FOR PYTHON PARSER ---
-        const finalResult = {
-            status: "SUCCESS",
-            agent_id: agentID,
-            storage_url: url,
-            impact_token: impactToken,
-            classification: classification.category,
-            timestamp: new Date().toISOString()
-        };
+        default:
+            result = { status: 'ERROR', message: `Unknown task type: ${taskType}` };
+    }
 
-        console.log(`\n✅ Aegis Protection Cycle Complete.`);
-        console.log(`__AEGIS_RESULT__:${JSON.stringify(finalResult)}`);
+    // Output structured result for Python parser
+    const outputResult = {
+        status: result.status,
+        message: result.message,
+        agent_id: result.stages?.identity?.agentId || null,
+        storage_url: result.stages?.archival?.permanentUrl || null,
+        impact_token: result.stages?.impact?.claimId || null,
+        classification: result.stages?.intelligence?.category || null,
+        zk_verified: result.stages?.zkProof?.verified || null,
+        execution_time_ms: result.executionTimeMs || 0,
+        timestamp: result.timestamp || new Date().toISOString()
+    };
 
-    } catch (error: any) {
-        console.error(`\n❌ Aegis Critical Error: ${error.message}`);
-        console.log(`__AEGIS_RESULT__:{"status":"ERROR","message":"${error.message}"}`);
+    console.log(`\n${'═'.repeat(48)}`);
+    if (result.status === 'SUCCESS') {
+        console.log('✅ AEGIS PROTECTION CYCLE COMPLETE');
+    } else if (result.status === 'SKIPPED') {
+        console.log('⏭️  AEGIS: DATA SAFE — NO ACTION NEEDED');
+    } else {
+        console.log('❌ AEGIS: PIPELINE ERROR');
+    }
+    console.log(`${'═'.repeat(48)}\n`);
+
+    console.log(`__AEGIS_RESULT__:${JSON.stringify(outputResult)}`);
+
+    if (result.status === 'ERROR') {
         process.exit(1);
     }
 }
 
-main();
+main().catch((err) => {
+    console.error(`Fatal error: ${err.message}`);
+    console.log(`__AEGIS_RESULT__:${JSON.stringify({ status: 'ERROR', message: err.message })}`);
+    process.exit(1);
+});

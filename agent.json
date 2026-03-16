@@ -1,31 +1,77 @@
 {
   "agent_name": "Aegis ZK-Sentinel",
+  "version": "1.0.0",
+  "type": "AutonomousAgent",
+  "description": "Autonomous guardian for digital rights. Detects, proves, and archives sensitive data using ZK-proofs on Arweave. Operates a 5-stage pipeline: Intelligence → Privacy → Infrastructure → Identity → Impact.",
   "operator_wallet": "0x0000000000000000000000000000000000000000",
-  "erc8004_identity": "0x0000000000000000000000000000000000000000",
+  "erc8004_identity": {
+    "registry": "eip155:11155111:0xf66e7CBdAE1Cb710fee7732E4e1f173624e137A7",
+    "agent_id": null,
+    "network": "sepolia"
+  },
   "supported_tools": [
-    "Irys SDK (Arweave/Permanent Storage)",
-    "Noir (Zero-Knowledge Proofs)",
-    "Hypercerts SDK (Impact Evaluation)",
-    "Impulse AI (ML Classification)",
-    "Web3 Infura/Alchemy API",
-    "Local File System Monitor"
+    {
+      "name": "Impulse AI",
+      "type": "classification",
+      "endpoint": "https://inference.impulselabs.ai/infer",
+      "purpose": "Autonomous ML-driven data sensitivity classification"
+    },
+    {
+      "name": "Noir ZK-Proofs",
+      "type": "cryptography",
+      "version": "1.0.0-beta.19",
+      "purpose": "Zero-knowledge integrity proofs for data authentication"
+    },
+    {
+      "name": "Irys SDK",
+      "type": "storage",
+      "network": "Arweave",
+      "purpose": "Permanent, censorship-resistant data archival"
+    },
+    {
+      "name": "ERC-8004 Registry",
+      "type": "identity",
+      "contract": "0xf66e7CBdAE1Cb710fee7732E4e1f173624e137A7",
+      "purpose": "On-chain agent identity and reputation"
+    },
+    {
+      "name": "Hypercerts SDK",
+      "type": "impact",
+      "standard": "ERC-1155",
+      "purpose": "Verifiable on-chain impact receipts"
+    },
+    {
+      "name": "Local File System Monitor",
+      "type": "discovery",
+      "purpose": "Autonomous file scanning and change detection"
+    }
   ],
   "supported_tech_stacks": [
-    "Python 3.9+",
-    "TypeScript/Node.js",
-    "Solidity (ERC-8004)",
-    "Noir (ZK-Circuit)"
+    "Python 3.10+",
+    "TypeScript / Node.js 18+",
+    "Solidity (ERC-8004, ERC-721)",
+    "Noir (ZK Circuit Language)"
   ],
   "compute_constraints": {
     "max_gas_per_tx": "500000",
     "max_daily_budget_usd": "10.00",
-    "throttle_interval_seconds": "3600"
+    "max_tasks_per_cycle": 10,
+    "heartbeat_seconds": 30,
+    "max_runtime_minutes": 60
   },
   "supported_task_categories": [
-    "Infrastructure Optimization",
-    "Digital Rights Protection (ZK-Integrity)",
+    "Digital Rights Protection",
+    "Autonomous Data Discovery",
+    "Zero-Knowledge Verification",
+    "Permanent Archival (Arweave)",
     "Impact Evaluation (Hypercerts)",
-    "ML-Driven Data Discovery (Impulse AI)",
-    "Autonomous Permanent Archival"
+    "On-Chain Identity Management"
+  ],
+  "pipeline_stages": [
+    "1. Intelligence (Impulse AI) — ML classification",
+    "2. Privacy (Noir ZK) — Integrity proof generation",
+    "3. Infrastructure (Irys/Arweave) — Permanent archival",
+    "4. Identity (ERC-8004) — Agent verification",
+    "5. Impact (Hypercerts) — Impact receipt issuance"
   ]
 }
