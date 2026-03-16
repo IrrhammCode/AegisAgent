@@ -1,0 +1,31 @@
+{
+  "agent_name": "Aegis ZK-Sentinel",
+  "operator_wallet": "0x0000000000000000000000000000000000000000",
+  "erc8004_identity": "0x0000000000000000000000000000000000000000",
+  "supported_tools": [
+    "Irys SDK (Arweave/Permanent Storage)",
+    "Noir (Zero-Knowledge Proofs)",
+    "Hypercerts SDK (Impact Evaluation)",
+    "Impulse AI (ML Classification)",
+    "Web3 Infura/Alchemy API",
+    "Local File System Monitor"
+  ],
+  "supported_tech_stacks": [
+    "Python 3.9+",
+    "TypeScript/Node.js",
+    "Solidity (ERC-8004)",
+    "Noir (ZK-Circuit)"
+  ],
+  "compute_constraints": {
+    "max_gas_per_tx": "500000",
+    "max_daily_budget_usd": "10.00",
+    "throttle_interval_seconds": "3600"
+  },
+  "supported_task_categories": [
+    "Infrastructure Optimization",
+    "Digital Rights Protection (ZK-Integrity)",
+    "Impact Evaluation (Hypercerts)",
+    "ML-Driven Data Discovery (Impulse AI)",
+    "Autonomous Permanent Archival"
+  ]
+}
