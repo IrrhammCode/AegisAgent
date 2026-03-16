@@ -86,7 +86,7 @@ function initNavigation() {
     });
 
     // Scroll-based active state
-    const sections = ['dashboard', 'pipeline', 'logs', 'tech'];
+    const sections = ['overview', 'pipeline', 'activity', 'assets'];
     window.addEventListener('scroll', () => {
         const scrollY = window.scrollY + 100;
         for (const id of sections) {
@@ -211,12 +211,12 @@ function getLogClass(step, status) {
 }
 
 function getLogIcon(step, status) {
-    if (status === 'FAILED' || status === 'ERROR') return '❌';
-    if (status === 'HALTED') return '🛑';
+    if (status === 'FAILED' || status === 'ERROR') return '[FAIL]';
+    if (status === 'HALTED') return '[HALT]';
     const icons = {
-        'STARTUP': '🚀', 'SHUTDOWN': '📋', 'DISCOVER': '🔍',
-        'PLAN': '📝', 'EXECUTE': '⚡', 'VERIFY': '✅',
-        'ARCHIVE': '📦', 'GUARDRAIL': '🛡️'
+        'STARTUP': '>>', 'SHUTDOWN': '--', 'DISCOVER': '??',
+        'PLAN': '::', 'EXECUTE': '->', 'VERIFY': 'OK',
+        'ARCHIVE': '[]', 'GUARDRAIL': '!!'
     };
     return icons[step] || '•';
 }
@@ -308,7 +308,7 @@ function runPipelineDemo() {
 
     if (btnRun) {
         btnRun.disabled = true;
-        btnRun.textContent = '⏳ Running...';
+        btnRun.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation:spin 1s linear infinite"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg> Running...';
     }
 
     // Reset
@@ -354,7 +354,7 @@ function runPipelineDemo() {
                     stage.classList.remove('active');
                     stage.classList.add('completed');
 
-                    addLogEntry('VERIFY', '✅ Protection cycle complete! Asset secured on Arweave.', 'success');
+                    addLogEntry('VERIFY', 'Protection cycle complete. Asset secured on Arweave.', 'success');
 
                     // Update stats
                     state.filesProtected++;
