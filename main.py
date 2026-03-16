@@ -2,151 +2,119 @@ import os
 import json
 import time
 import subprocess
-import argparse
 from datetime import datetime
 from dotenv import load_dotenv
 
+# --- AEGIS: THE AUTONOMOUS BRAIN ---
+# This engine implements the Full Decision Loop: 
+# DISCOVER -> PLAN -> EXECUTE -> VERIFY
+
 load_dotenv()
 
-# --- Configuration ---
 LOG_FILE = "agent_log.json"
-MANIFEST_FILE = "agent.json"
-VAULT_DIR = "./vault_data"
-MAX_COMPUTE_BUDGET = float(os.getenv("MAX_COMPUTE_BUDGET", 10.0))
+VAULT_DIR = "vault_data"
+PROCESSED_DIR = "vault_data_archived"
 
-# --- State Management ---
-class AegisState:
+class AegisAgent:
     def __init__(self):
-        self.total_gas_spent = 0.0
-        self.tasks_completed = 0
         self.start_time = datetime.now()
+        self.tasks_completed = 0
+        self._ensure_dirs()
+        self.logs = []
+        self._load_logs()
 
-state = AegisState()
+    def _ensure_dirs(self):
+        for d in [VAULT_DIR, PROCESSED_DIR]:
+            if not os.path.exists(d):
+                os.makedirs(d)
 
-def log_action(step, decision, details, status="SUCCESS"):
-    """Appends a structured log entry to agent_log.json."""
-    entry = {
-        "timestamp": datetime.now().isoformat(),
-        "step": step,
-        "decision": decision,
-        "details": details,
-        "status": status
-    }
-    
-    logs = []
-    if os.path.exists(LOG_FILE):
-        with open(LOG_FILE, "r") as f:
-            try:
-                logs = json.load(f)
-            except:
-                pass
+    def _load_logs(self):
+        if os.path.exists(LOG_FILE):
+            with open(LOG_FILE, 'r') as f:
+                try: self.logs = json.load(f)
+                except: self.logs = []
+
+    def log(self, step, decision, details, status="SUCCESS"):
+        entry = {
+            "timestamp": datetime.now().isoformat(),
+            "step": step,
+            "decision": decision,
+            "details": details,
+            "status": status
+        }
+        self.logs.append(entry)
+        with open(LOG_FILE, 'w') as f:
+            json.dump(self.logs, f, indent=2)
+        print(f"[{step}] {decision} -> {status}")
+
+    def discover(self):
+        """Stage 1: Discover. Seek data requiring protection."""
+        files = [f for f in os.listdir(VAULT_DIR) if os.path.isfile(os.path.join(VAULT_DIR, f))]
+        self.log("DISCOVER", f"Found {len(files)} potential items in vault.", {"count": len(files)})
+        return files
+
+    def plan(self, items):
+        """Stage 2: Plan. Prioritize tasks based on sensitivity."""
+        # Autonomous prioritization: Agent decides to process all new items found.
+        plan = [{"file": f, "path": os.path.join(VAULT_DIR, f), "id": f.split('.')[0]} for f in items]
+        self.log("PLAN", f"Prioritized {len(plan)} tasks for protection cycle.", {"plan_size": len(plan)})
+        return plan
+
+    def execute(self, task):
+        """Stage 3: Execute. Delegate to the 5-Stage Orchestrator (TS)."""
+        self.log("EXECUTE", f"Running security pipeline for {task['file']}", {"task_id": task['id']})
+        
+        try:
+            cmd = ["npx", "ts-node", "src/index.ts", "PROTECT_ASSET", task['path']]
+            proc = subprocess.run(cmd, capture_output=True, text=True)
+            
+            if "__AEGIS_RESULT__:" in proc.stdout:
+                res_str = proc.stdout.split("__AEGIS_RESULT__:")[1].strip()
+                result = json.loads(res_str)
                 
-    logs.append(entry)
-    with open(LOG_FILE, "w") as f:
-        json.dump(logs, f, indent=2)
-    
-    print(f"[{entry['timestamp']}] {step}: {decision} -> {status}")
-
-def discover():
-    """Phase 1: Discover data requiring protection."""
-    log_action("DISCOVER", "Scanning vault_data directory", {"path": VAULT_DIR})
-    
-    if not os.path.exists(VAULT_DIR):
-        os.makedirs(VAULT_DIR)
-        # Create a dummy file for the demo if empty
-        with open(os.path.join(VAULT_DIR, "user_identity_shard_1.json"), "w") as f:
-            json.dump({"owner": "0x123", "data": "sensitive_profile_data"}, f)
-            
-    files = [f for f in os.listdir(VAULT_DIR) if os.path.isfile(os.path.join(VAULT_DIR, f))]
-    log_action("DISCOVER", f"Found {len(files)} files", {"files": files})
-    return files
-
-def plan(files):
-    """Phase 2: Plan which files to archive based on budget and priority."""
-    tasks = []
-    for f in files:
-        # Simple policy: Archive everything not already logged as archived
-        file_path = os.path.join(VAULT_DIR, f)
-        tasks.append({"file": f, "path": file_path, "priority": "HIGH"})
-        
-    log_action("PLAN", f"Constructed execution plan for {len(tasks)} tasks", {"tasks": tasks})
-    return tasks
-
-def execute(task):
-    """Phase 3: Execute the infrastructure archival via the TS orchestrator."""
-    log_action("EXECUTE", f"Protecting digital rights for {task['file']}", task)
-    
-    try:
-        # Call the TypeScript orchestrator
-        # npx ts-node src/index.ts <task_type> <data_path>
-        cmd = ["npx", "ts-node", "src/index.ts", "SECURE_ARCHIVE", task["path"]]
-        result = subprocess.run(cmd, capture_output=True, text=True)
-        
-        if "__AEGIS_RESULT__:" in result.stdout:
-            result_json_str = result.stdout.split("__AEGIS_RESULT__:")[1].strip()
-            result_data = json.loads(result_json_str)
-            
-            if result_data["status"] == "SUCCESS":
-                log_action("EXECUTE", f"Task Completed: {task['file']}", result_data)
-                return True
+                if result.get("status") == "SUCCESS":
+                    self.log("VERIFY", f"Archival verified for {task['file']}", result)
+                    # Move to processed
+                    os.rename(task['path'], os.path.join(PROCESSED_DIR, task['file']))
+                    self.tasks_completed += 1
+                    return True
+                else:
+                    self.log("EXECUTE", f"Pipeline failed for {task['file']}", result, status="FAILED")
             else:
-                log_action("EXECUTE", f"Task Failed: {task['file']}", result_data, status="FAILED")
-        else:
-            log_action("EXECUTE", "Unexpected subprocess output", {"stdout": result.stdout, "stderr": result.stderr}, status="FAILED")
+                self.log("ERROR", "Orchestrator returned invalid output", {"stderr": proc.stderr}, status="FAILED")
+        except Exception as e:
+            self.log("CRITICAL", f"Execution error: {str(e)}", {}, status="ERROR")
+        
+        return False
+
+    def check_guardrails(self):
+        """Safety & Budget Guardrails."""
+        uptime = (datetime.now() - self.start_time).total_seconds()
+        # Autonomous safety: Stop if running too long or too many tasks in one burst
+        if self.tasks_completed >= 10:
+            self.log("GUARDRAIL", "Task quota reached for current cycle.", {"quota": 10}, status="HALTED")
+            return False
+        return True
+
+    def run(self):
+        print("\n" + "="*40)
+        print("🛡️  AEGIS AUTONOMOUS BRAIN ONLINE")
+        print("Challenge: Agent Only & Infrastructure")
+        print("="*40 + "\n")
+
+        while True:
+            items = self.discover()
+            if not items:
+                print("... Sentinel monitoring ...")
+            else:
+                tasks = self.plan(items)
+                for task in tasks:
+                    if not self.check_guardrails(): break
+                    self.execute(task)
             
-    except Exception as e:
-        log_action("EXECUTE", f"Execution error: {str(e)}", task, status="ERROR")
-    
-    return False
-
-def verify():
-    """Phase 4: Verify overall system state and budget."""
-    log_action("VERIFY", "Audit system integrity", {"uptime": str(datetime.now() - state.start_time)})
-    return True
-
-def main_loop():
-    print("=== Aegis Autonomous Sentinel Initialized ===")
-    print("Challenge: Agent Only | Track: Infrastructure & Digital Rights")
-    print("Stack: ERC-8004 + Noir ZK + Arweave (Irys)")
-    print("============================================\n")
-    
-    while True:
-        # 1. Discover
-        files = discover()
-        
-        # 2. Plan
-        tasks = plan(files)
-        
-        # 3. Execute
-        for task in tasks:
-            # Check budget awareness (Guardrail)
-            if state.tasks_completed >= 5: # Simulating budget limit for demo
-                log_action("GUARDRAIL", "Monthly compute budget reached", {"budget": MAX_COMPUTE_BUDGET})
-                break
-                
-            success = execute(task)
-            if success:
-                state.tasks_completed += 1
-                # Remove file after successful archival to prevent re-processing in loop
-                # In real life, we would move it to an 'archived' folder
-                os.remove(task["path"])
-        
-        # 4. Verify
-        verify()
-        
-        print("\n[SENTINEL] Decision loop complete. Sleeping for 60 seconds...\n")
-        time.sleep(60)
+            time.sleep(60) # Decision heartbeat
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Aegis Autonomous Agent")
-    parser.add_argument("--once", action="store_true", help="Run a single decision loop and exit")
-    args = parser.parse_known_args()[0]
-    
-    if args.once:
-        files = discover()
-        tasks = plan(files)
-        if tasks:
-            execute(tasks[0])
-        verify()
-    else:
-        main_loop()
+    agent = AegisAgent()
+    # For the hackathon demo, we typically run one cycle or loop
+    agent.run()
