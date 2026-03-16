@@ -65,7 +65,12 @@ class AegisAgent:
         self.log("EXECUTE", f"Running security pipeline for {task['file']}", {"task_id": task['id']})
         
         try:
-            cmd = ["npx", "ts-node", "src/index.ts", "PROTECT_ASSET", task['path']]
+            # Using the local project binary to avoid npx interactive prompts
+            ts_node_bin = os.path.join("node_modules", ".bin", "ts-node")
+            if not os.path.exists(ts_node_bin):
+                ts_node_bin = "ts-node" # Fallback to path
+
+            cmd = [ts_node_bin, "src/index.ts", "PROTECT_ASSET", task['path']]
             proc = subprocess.run(cmd, capture_output=True, text=True)
             
             if "__AEGIS_RESULT__:" in proc.stdout:

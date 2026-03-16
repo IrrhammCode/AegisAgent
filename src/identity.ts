@@ -9,7 +9,7 @@ import * as dotenv from 'dotenv';
 
 dotenv.config();
 
-const REGISTRY_ADDRESS = "0x8004A818BFB912233c491871b3d84c89A494BD9e";
+const REGISTRY_ADDRESS = "0xf66e7CBdAE1Cb710fee7732E4e1f173624e137A7";
 const REGISTRY_ABI = [
     "function registerAgent(address operator, string metadataURI) public returns (uint256)",
     "function getAgentID(address operator) public view returns (uint256)",

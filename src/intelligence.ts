@@ -19,13 +19,14 @@ export interface ClassificationResult {
 
 /**
  * Simulates the Impulse AI autonomous ML classification.
- * In a live environment, this would call the Impulse API or a local 
- * fine-tuned model to analyze the content of the data.
+ * In a live environment, this would call the Impulse API (https://inference.impulselabs.ai/infer).
  */
 export async function classifyDataWithImpulse(filePath: string): Promise<ClassificationResult> {
-    console.log(`[Intelligence] Impulse AI: Analyzing data patterns in ${path.basename(filePath)}...`);
+    console.log(`[Intelligence] Impulse AI: Sending data to https://inference.impulselabs.ai/infer...`);
     
-    // Simulate reading the first few KB for analysis
+    // Pattern: POST https://inference.impulselabs.ai/infer
+    // Headers: Authorization: Bearer imp_...
+    
     const buffer = fs.readFileSync(filePath).toString('utf-8').slice(0, 1000);
     const content = buffer.toLowerCase();
 

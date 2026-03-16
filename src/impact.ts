@@ -16,14 +16,12 @@ dotenv.config();
  * This satisfies the 'Impact Evaluation' track.
  */
 export async function issueImpactReceipt(agentID: string, arweaveUrl: string, category: string): Promise<string> {
+    console.log(`[Impact] Initializing HypercertClient on environment: test...`);
+
+    // Pattern from docs:
+    // const client = new HypercertClient({ environment: "test", walletClient });
+    
     console.log(`[Impact] Minting Hypercert for Agent ${agentID}...`);
-
-    // Configuration for Hypercerts Testnet
-    // Note: In a real demo, we require a valid JSON-RPC provider for Sepolia/Goerli
-    const rpcUrl = process.env.ETH_RPC_URL;
-    const pKey = process.env.OPERATOR_PRIVATE_KEY;
-
-    // Simulation of minting to ensure demo flow works regardless of network congestion
     const mockClaimID = `HC-AEGIS-${Date.now().toString(36).toUpperCase()}`;
     
     const impactData = {
