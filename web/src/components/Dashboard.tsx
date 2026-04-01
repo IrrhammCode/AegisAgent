@@ -14,6 +14,8 @@ interface DashboardProps {
   onTabChange: (tab: string) => void;
 }
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+
 const Dashboard: React.FC<DashboardProps> = ({ onReset, activeTab, onTabChange }) => {
   const {
     logs, assets, activeStage,
@@ -58,7 +60,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onReset, activeTab, onTabChange }
     fileArray.forEach(f => formData.append('files', f));
 
     try {
-      const res = await fetch('http://localhost:3001/api/upload', {
+      const res = await fetch(`${API_BASE_URL}/api/upload`, {
         method: 'POST',
         body: formData,
       });

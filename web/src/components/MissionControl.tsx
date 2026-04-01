@@ -9,6 +9,8 @@ interface MissionControlProps {
   onDeploy: (targets: string[]) => void;
 }
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+
 const MissionControl: React.FC<MissionControlProps> = ({ operatorAddress, onDeploy }) => {
   const [uploadedFiles, setUploadedFiles] = useState<{ name: string; size: number }[]>([]);
   const [isUploading, setIsUploading] = useState(false);
@@ -34,7 +36,7 @@ const MissionControl: React.FC<MissionControlProps> = ({ operatorAddress, onDepl
     fileArray.forEach(f => formData.append('files', f));
 
     try {
-      const res = await fetch('http://localhost:3001/api/upload', {
+      const res = await fetch(`${API_BASE_URL}/api/upload`, {
         method: 'POST',
         body: formData,
       });

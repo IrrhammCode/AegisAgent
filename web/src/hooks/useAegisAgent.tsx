@@ -101,7 +101,7 @@ export const AegisAgentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
     try {
       // 1. Trigger deployment
-      await fetch('http://localhost:3001/api/deploy', {
+      await fetch(`${API_BASE_URL}/api/deploy`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ targets, config })
@@ -229,7 +229,7 @@ export const AegisAgentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     setSelectedTargets([]);
     setGasUsed(0);
     try {
-      await fetch('http://localhost:3001/api/reset', { method: 'POST' });
+      await fetch(`${API_BASE_URL}/api/reset`, { method: 'POST' });
     } catch(e) { /* ignore */ }
   }, []);
 
