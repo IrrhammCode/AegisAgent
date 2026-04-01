@@ -1,0 +1,35 @@
+# Vercel Ignore File
+# Prevent Vercel from processing unnecessary Python and backend files
+
+# Python virtual environment
+venv/
+.venv/
+__pycache__/
+*.pyc
+
+# Local Data Vaults (Protected Files)
+vault_data/
+vault_data_archived/
+.aegis_keyring.json
+
+# Backend & Orchestration
+main.py
+requirements.txt
+server.js
+agent_log.json
+agent.json
+
+# ZK Circuits (Noir source)
+circuits/
+
+# Demo Scripts & Presentation Material
+scripts/
+DEMO_SCRIPT.md
+VERCEL_DEPLOYMENT.md
+web-vanilla-backup/
+
+# IDE & Logs
+.vscode/
+.idea/
+*.log
+.DS_Store
