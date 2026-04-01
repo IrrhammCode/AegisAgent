@@ -9,6 +9,10 @@
     "agent_id": null,
     "network": "sepolia"
   },
+  "atproto_identity": {
+    "handle": "aegis.agent.xyz",
+    "did": null
+  },
   "supported_tools": [
     {
       "name": "Impulse AI",
@@ -35,10 +39,16 @@
       "purpose": "On-chain agent identity and reputation"
     },
     {
+      "name": "Hyperscan Agent API",
+      "type": "impact",
+      "standard": "ATProto",
+      "purpose": "Verifiable ATProto impact receipts and reputation"
+    },
+    {
       "name": "Hypercerts SDK",
       "type": "impact",
       "standard": "ERC-1155",
-      "purpose": "Verifiable on-chain impact receipts"
+      "purpose": "Financial anchoring of impact receipts (optional)"
     },
     {
       "name": "Local File System Monitor",
@@ -71,7 +81,11 @@
     "1. Intelligence (Impulse AI) — ML classification",
     "2. Privacy (Noir ZK) — Integrity proof generation",
     "3. Infrastructure (Irys/Arweave) — Permanent archival",
-    "4. Identity (ERC-8004) — Agent verification",
-    "5. Impact (Hypercerts) — Impact receipt issuance"
+    "4. Identity (ATProto/ERC-8004) — Agent verification",
+    "5. Impact (Hyperscan/Hypercerts) — Impact record issuance"
+  ],
+  "lexicons": [
+    "org.hypercerts.claim.activity",
+    "app.certified.badge"
   ]
 }

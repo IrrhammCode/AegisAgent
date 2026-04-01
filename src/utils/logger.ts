@@ -21,6 +21,34 @@ export interface LogEntry {
 const LOG_DIR = path.resolve(__dirname, '../../logs');
 const LOG_FILE = path.join(LOG_DIR, 'aegis_runtime.log');
 
+/**
+ * Security: Sanitize and truncate data before logging to prevent 
+ * credential leakage or log flooding.
+ */
+function sanitizeData(data: any): any {
+    if (!data) return data;
+    
+    // Convert to string to check size and content
+    const raw = JSON.stringify(data);
+    
+    // Truncate large blobs (like file content samples)
+    if (raw.length > 1024) {
+        return { _info: "Data truncated for security/size", _length: raw.length };
+    }
+
+    // Redact obvious keys/secrets in object keys
+    const sanitized = { ...data };
+    const secretKeys = ['privateKey', 'apiKey', 'secret', 'mnemonic', 'token', 'password'];
+    
+    for (const key of Object.keys(sanitized)) {
+        if (secretKeys.some(sk => key.toLowerCase().includes(sk))) {
+            sanitized[key] = "[REDACTED]";
+        }
+    }
+
+    return sanitized;
+}
+
 function ensureLogDir(): void {
     if (!fs.existsSync(LOG_DIR)) {
         fs.mkdirSync(LOG_DIR, { recursive: true });
@@ -33,7 +61,7 @@ export function log(level: LogLevel, module: string, message: string, data?: Rec
         level,
         module,
         message,
-        ...(data ? { data } : {})
+        data: data ? sanitizeData(data) : undefined
     };
 
     // Pretty console output

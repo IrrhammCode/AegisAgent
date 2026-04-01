@@ -1,0 +1,6 @@
+[package]
+name = "integrity_proof"
+type = "bin"
+authors = ["Aegis"]
+
+[dependencies]

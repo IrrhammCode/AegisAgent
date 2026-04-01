@@ -1,22 +1,20 @@
 /**
  * ╔══════════════════════════════════════════════════════════════╗
- * ║  AEGIS AGENT — Stage 1: Intelligence (Impulse AI)           ║
- * ║  Autonomous ML-driven data sensitivity classification.      ║
- * ║  API: POST https://inference.impulselabs.ai/infer           ║
+ * ║  AEGIS AGENT — Stage 1: Intelligence (Local Sentinel)       ║
+ * ║  Autonomous high-performance data sensitivity classification.║
+ * ║  Privacy-first: No data ever leaves the local environment.  ║
  * ╚══════════════════════════════════════════════════════════════╝
  */
 
 import * as fs from 'fs';
 import * as path from 'path';
-import * as crypto from 'crypto';
-import { config } from './utils/config';
 import { logInfo, logWarn, logError, logDebug } from './utils/logger';
 
 const MODULE = 'Intelligence';
 
 // ─── Types ───────────────────────────────────────────────────
 
-export type SensitivityCategory = 'PII' | 'FINANCIAL' | 'MEDICAL' | 'CREDENTIALS' | 'GENERAL';
+export type SensitivityCategory = 'PII' | 'FINANCIAL' | 'MEDICAL' | 'CREDENTIALS' | 'MEDIA' | 'INTERNAL' | 'GENERAL';
 export type Recommendation = 'ENCRYPT_AND_ARCHIVE' | 'ARCHIVE_ONLY' | 'MONITOR' | 'IGNORE';
 
 export interface ClassificationResult {
@@ -37,7 +35,8 @@ const SENSITIVITY_PATTERNS: Record<SensitivityCategory, RegExp[]> = {
         /private[_\-\s]?key/i, /secret[_\-\s]?key/i, /mnemonic/i,
         /seed[_\-\s]?phrase/i, /api[_\-\s]?key/i, /password/i,
         /bearer\s+[a-zA-Z0-9\-_]+/i, /0x[a-fA-F0-9]{64}/,
-        /-----BEGIN\s+(RSA\s+)?PRIVATE\s+KEY-----/
+        /-----BEGIN\s+(RSA\s+)?PRIVATE\s+KEY-----/,
+        /access[_\-\s]?key/i, /aws[_\-\s]?secret/i, /secret[_\-\s]?access[_\-\s]?key/i
     ],
     PII: [
         /\b\d{3}[-.]?\d{2}[-.]?\d{4}\b/,  // SSN pattern
@@ -58,11 +57,17 @@ const SENSITIVITY_PATTERNS: Record<SensitivityCategory, RegExp[]> = {
         /medical\s*record/i, /health\s*insurance/i,
         /blood\s*type/i, /allergy/i, /HIPAA/i
     ],
+    INTERNAL: [
+        /architecture/i, /roadmap/i, /specification/i, /internal/i,
+        /confidential/i, /draft/i, /proprietary/i, /contract/i,
+        /aegis/i, /sentinel/i, /infrastructure/i
+    ],
+    MEDIA: [],
     GENERAL: []
 };
 
 const CATEGORY_PRIORITY: SensitivityCategory[] = [
-    'CREDENTIALS', 'PII', 'MEDICAL', 'FINANCIAL', 'GENERAL'
+    'CREDENTIALS', 'PII', 'MEDICAL', 'FINANCIAL', 'INTERNAL', 'MEDIA', 'GENERAL'
 ];
 
 // ─── Entropy Calculator ──────────────────────────────────────
@@ -96,6 +101,8 @@ async function classifyLocally(content: string): Promise<{
         const regexes = SENSITIVITY_PATTERNS[category];
         let matchCount = 0;
 
+        if (!regexes) continue;
+
         for (const regex of regexes) {
             const matches = content.match(new RegExp(regex.source, regex.flags + 'g'));
             if (matches) {
@@ -119,71 +126,10 @@ async function classifyLocally(content: string): Promise<{
     return { category: bestCategory, confidence, patterns: matchedPatterns };
 }
 
-// ─── Impulse AI Remote Call (with fallback) ──────────────────
-
-async function callImpulseAPI(content: string): Promise<{
-    category: SensitivityCategory;
-    confidence: number;
-} | null> {
-    if (config.isDemoMode || config.impulseApiKey === 'imp_demo_key') {
-        logDebug(MODULE, 'Demo mode — skipping remote Impulse API call.');
-        return null;
-    }
-
-    try {
-        // Dynamic import to avoid hard dependency
-        const https = await import('https');
-        const postData = JSON.stringify({
-            deployment_id: config.impulseDeploymentId,
-            inputs: {
-                text_sample: content.slice(0, 2000),
-                task: 'sensitivity_classification'
-            }
-        });
-
-        return new Promise((resolve) => {
-            const url = new URL(config.impulseEndpoint);
-            const req = https.request({
-                hostname: url.hostname,
-                port: 443,
-                path: url.pathname,
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${config.impulseApiKey}`,
-                    'Content-Length': Buffer.byteLength(postData)
-                },
-                timeout: 10000
-            }, (res) => {
-                let body = '';
-                res.on('data', (chunk: string) => body += chunk);
-                res.on('end', () => {
-                    try {
-                        const parsed = JSON.parse(body);
-                        resolve({
-                            category: parsed.outputs?.category || 'GENERAL',
-                            confidence: parsed.outputs?.confidence || 0.5
-                        });
-                    } catch {
-                        resolve(null);
-                    }
-                });
-            });
-
-            req.on('error', () => resolve(null));
-            req.on('timeout', () => { req.destroy(); resolve(null); });
-            req.write(postData);
-            req.end();
-        });
-    } catch {
-        return null;
-    }
-}
-
 // ─── Public API ──────────────────────────────────────────────
 
-export async function classifyDataWithImpulse(filePath: string): Promise<ClassificationResult> {
-    logInfo(MODULE, `Analyzing ${path.basename(filePath)} via Impulse AI pipeline...`);
+export async function classifyDataIntelligence(filePath: string): Promise<ClassificationResult> {
+    logInfo(MODULE, `Analyzing ${path.basename(filePath)} via Local Sentinel Intelligence...`);
 
     // Read file
     if (!fs.existsSync(filePath)) {
@@ -197,15 +143,21 @@ export async function classifyDataWithImpulse(filePath: string): Promise<Classif
 
     logDebug(MODULE, `File size: ${stats.size} bytes, Entropy: ${entropy}`);
 
-    // Step 1: Try the remote Impulse AI API
-    const remoteResult = await callImpulseAPI(sample);
-
-    // Step 2: Local pattern matching (always run as a secondary check)
+    // Run local pattern matching
     const localResult = await classifyLocally(sample);
 
-    // Step 3: Merge results — prefer remote if available, otherwise local
-    const finalCategory = remoteResult?.category || localResult.category;
-    const finalConfidence = remoteResult?.confidence || localResult.confidence;
+    // Special check for Binary/Media files
+    const ext = path.extname(filePath).toLowerCase();
+    const isMediaExt = ['.png', '.jpg', '.jpeg', '.gif', '.svg', '.webp', '.pdf', '.zip'].includes(ext);
+    
+    let finalCategory = localResult.category;
+    let finalConfidence = localResult.confidence;
+    
+    if (isMediaExt || entropy > 6.0) {
+        finalCategory = 'MEDIA';
+        finalConfidence = Math.max(finalConfidence, 0.9);
+    }
+
     const isSensitive = finalCategory !== 'GENERAL' && finalConfidence > 0.4;
 
     // Determine recommendation
@@ -238,3 +190,4 @@ export async function classifyDataWithImpulse(filePath: string): Promise<Classif
     logInfo(MODULE, result.summary);
     return result;
 }
+

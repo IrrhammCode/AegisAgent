@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aegis ZK-Sentinel — Autonomous Guardian for Digital Rights</title>
+    <meta name="description" content="Aegis is an autonomous agent that detects sensitive data, proves its integrity with Zero-Knowledge proofs, and archives it permanently on Arweave.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/landing.css">
+</head>
+<body>
+    <!-- Ambient Background -->
+    <div class="ambient-bg">
+        <div class="ambient-orb orb-1"></div>
+        <div class="ambient-orb orb-2"></div>
+        <div class="ambient-orb orb-3"></div>
+    </div>
+
+    <!-- Particles -->
+    <div class="particles" id="particles"></div>
+
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="nav-brand">
+            <div class="nav-logo">
+                <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                    <path d="M16 2L28 8V24L16 30L4 24V8L16 2Z" stroke="url(#logoGrad)" stroke-width="2" fill="none"/>
+                    <path d="M16 8L22 11V21L16 24L10 21V11L16 8Z" fill="url(#logoGrad)" opacity="0.3"/>
+                    <path d="M16 12L19 13.5V18.5L16 20L13 18.5V13.5L16 12Z" fill="url(#logoGrad)"/>
+                    <defs>
+                        <linearGradient id="logoGrad" x1="4" y1="2" x2="28" y2="30">
+                            <stop stop-color="#00F0FF"/>
+                            <stop offset="1" stop-color="#7B61FF"/>
+                        </linearGradient>
+                    </defs>
+                </svg>
+            </div>
+            <span class="nav-title">AEGIS</span>
+            <span class="nav-badge">ZK-SENTINEL</span>
+        </div>
+        <div class="nav-links">
+            <a href="#how-it-works" class="nav-link">How it Works</a>
+            <a href="#features" class="nav-link">Features</a>
+            <a href="#tech" class="nav-link">Technology</a>
+            <a href="#architecture" class="nav-link">Architecture</a>
+        </div>
+        <div class="nav-actions">
+            <button class="btn btn-connect" id="btnConnectNav">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="14" rx="2"/><path d="M2 10h20"/><circle cx="17" cy="16" r="1.5" fill="currentColor" stroke="none"/></svg>
+                <span id="walletLabel">Connect Wallet</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- ═══════════════════════════════════════════════════
+         HERO — Big, Clear, Impactful
+         ═══════════════════════════════════════════════════ -->
+    <header class="hero-landing" id="hero">
+        <div class="hero-center">
+            <div class="hero-badge-row">
+                <span class="hero-pill">
+                    <span class="pulse-dot"></span>
+                    AUTONOMOUS AGENT
+                </span>
+                <span class="hero-pill pill-outline">PL_GENESIS 2026</span>
+            </div>
+
+            <h1 class="hero-title-new">
+                Your Data. <span class="hero-gradient">Proven.</span><br>
+                <span class="hero-gradient">Protected.</span> <span class="hero-gradient">Permanent.</span>
+            </h1>
+
+            <p class="hero-subtitle-new">
+                Aegis is an autonomous agent that <strong>detects</strong> your sensitive data,
+                <strong>proves</strong> its integrity with Zero-Knowledge proofs,
+                and <strong>archives</strong> it forever on Arweave — without any human intervention.
+            </p>
+
+            <div class="hero-cta-row">
+                <button class="btn btn-primary btn-xl" id="btnConnectHero">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="14" rx="2"/><path d="M2 10h20"/><circle cx="17" cy="16" r="1.5" fill="currentColor" stroke="none"/></svg>
+                    Launch Dashboard
+                </button>
+                <a href="https://github.com/IrrhammCode/AegisAgent" target="_blank" class="btn btn-ghost btn-xl">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+                    View Source
+                </a>
+            </div>
+
+            <!-- Trust signals as a horizontal bar -->
+            <div class="trust-bar">
+                <div class="trust-pill">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--cyan)" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                    Zero-Knowledge Privacy
+                </div>
+                <div class="trust-pill">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--purple)" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                    On-Chain Identity
+                </div>
+                <div class="trust-pill">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><path d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7"/><ellipse cx="12" cy="7" rx="8" ry="3"/></svg>
+                    200+ Year Storage
+                </div>
+                <div class="trust-pill">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--orange)" stroke-width="2"><path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0"/></svg>
+                    Impact Verified
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- ═══════════════════════════════════════════════════
+         HOW IT WORKS — Simple 3-step explanation
+         ═══════════════════════════════════════════════════ -->
+    <section class="how-section" id="how-it-works">
+        <div class="section-container">
+            <div class="section-header centered">
+                <span class="section-tag">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                    HOW IT WORKS
+                </span>
+                <h2 class="section-title">Three Steps to Permanent Protection</h2>
+                <p class="section-desc">Aegis protects your data in three simple, fully autonomous stages.</p>
+            </div>
+
+            <div class="steps-grid">
+                <div class="step-card">
+                    <div class="step-number">1</div>
+                    <div class="step-icon-wrapper cyan-glow">
+                        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/><path d="M11 8v6M8 11h6"/></svg>
+                    </div>
+                    <h3>Detect</h3>
+                    <p>The agent scans your files and uses <strong>Impulse AI</strong> to classify sensitive data — passwords, financial records, personal information — all automatically.</p>
+                </div>
+
+                <div class="step-connector">
+                    <svg width="48" height="24" viewBox="0 0 48 24"><path d="M0 12h40" stroke="url(#connGrad1)" stroke-width="2" stroke-dasharray="4 4"/><polygon points="38,6 48,12 38,18" fill="var(--cyan)" opacity="0.6"/><defs><linearGradient id="connGrad1" x1="0" y1="12" x2="40" y2="12"><stop stop-color="#00F0FF"/><stop offset="1" stop-color="#7B61FF"/></linearGradient></defs></svg>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number">2</div>
+                    <div class="step-icon-wrapper purple-glow">
+                        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
+                    </div>
+                    <h3>Prove</h3>
+                    <p>A <strong>Zero-Knowledge proof</strong> is generated using Noir. This cryptographically proves your data is authentic and untampered — without ever revealing its contents.</p>
+                </div>
+
+                <div class="step-connector">
+                    <svg width="48" height="24" viewBox="0 0 48 24"><path d="M0 12h40" stroke="url(#connGrad2)" stroke-width="2" stroke-dasharray="4 4"/><polygon points="38,6 48,12 38,18" fill="var(--purple)" opacity="0.6"/><defs><linearGradient id="connGrad2" x1="0" y1="12" x2="40" y2="12"><stop stop-color="#7B61FF"/><stop offset="1" stop-color="#FF6BCB"/></linearGradient></defs></svg>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number">3</div>
+                    <div class="step-icon-wrapper pink-glow">
+                        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"/></svg>
+                    </div>
+                    <h3>Archive</h3>
+                    <p>Your proven data is permanently stored on <strong>Arweave</strong> via Irys. It can never be deleted, altered, or censored — guaranteed for 200+ years.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════
+         FEATURES — What makes Aegis special
+         ═══════════════════════════════════════════════════ -->
+    <section class="features-section" id="features">
+        <div class="section-container">
+            <div class="section-header centered">
+                <span class="section-tag">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                    CAPABILITIES
+                </span>
+                <h2 class="section-title">The Full 5-Stage Pipeline</h2>
+                <p class="section-desc">Beyond detect-prove-archive, Aegis adds on-chain identity and verifiable impact tracking for complete transparency.</p>
+            </div>
+
+            <div class="features-bento">
+                <!-- Large feature card -->
+                <div class="bento-card bento-hero">
+                    <div class="bento-glow"></div>
+                    <div class="bento-icon cyan-icon">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                    </div>
+                    <div class="bento-stage">Stage 1</div>
+                    <h3>Intelligence</h3>
+                    <p>Impulse AI engine performs ML-powered sensitivity classification. Detects PII, financial data, credentials, and medical information using pattern matching and entropy analysis.</p>
+                    <div class="bento-tag">Impulse AI</div>
+                </div>
+
+                <!-- Smaller feature cards -->
+                <div class="bento-card">
+                    <div class="bento-icon purple-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                    </div>
+                    <div class="bento-stage">Stage 2</div>
+                    <h3>Privacy</h3>
+                    <p>Noir ZK-proofs prove SHA-256 data integrity without revealing contents.</p>
+                    <div class="bento-tag">Noir</div>
+                </div>
+
+                <div class="bento-card">
+                    <div class="bento-icon pink-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"/></svg>
+                    </div>
+                    <div class="bento-stage">Stage 3</div>
+                    <h3>Infrastructure</h3>
+                    <p>Arweave via Irys for permanent, censorship-resistant archival.</p>
+                    <div class="bento-tag">Irys / Arweave</div>
+                </div>
+
+                <div class="bento-card">
+                    <div class="bento-icon orange-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"/></svg>
+                    </div>
+                    <div class="bento-stage">Stage 4</div>
+                    <h3>Identity</h3>
+                    <p>ERC-8004 registers agent actions on Ethereum Sepolia. Trustless, verifiable.</p>
+                    <div class="bento-tag">ERC-8004</div>
+                </div>
+
+                <div class="bento-card">
+                    <div class="bento-icon green-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
+                    </div>
+                    <div class="bento-stage">Stage 5</div>
+                    <h3>Impact</h3>
+                    <p>Hypercerts ERC-1155 receipt minted for every action. On-chain proof of value.</p>
+                    <div class="bento-tag">Hypercerts</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════
+         TECHNOLOGY STACK
+         ═══════════════════════════════════════════════════ -->
+    <section class="tech-landing" id="tech">
+        <div class="section-container">
+            <div class="section-header centered">
+                <span class="section-tag">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+                    POWERED BY
+                </span>
+                <h2 class="section-title">Five Technologies, One Agent</h2>
+                <p class="section-desc">Each stage of the pipeline is backed by a best-in-class protocol.</p>
+            </div>
+            <div class="tech-cards-grid">
+                <div class="tech-card">
+                    <div class="tech-logo-new impulse-logo">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                    </div>
+                    <h4>Impulse AI</h4>
+                    <p>ML-powered data classification engine. Detects sensitive patterns and measures data entropy.</p>
+                    <a href="https://docs.impulselabs.ai" target="_blank" class="tech-link">
+                        docs.impulselabs.ai
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>
+                    </a>
+                </div>
+                <div class="tech-card">
+                    <div class="tech-logo-new noir-logo">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                    </div>
+                    <h4>Noir</h4>
+                    <p>Zero-Knowledge proof language by Aztec. Proves data integrity without revealing contents.</p>
+                    <a href="https://noir-lang.org" target="_blank" class="tech-link">
+                        noir-lang.org
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>
+                    </a>
+                </div>
+                <div class="tech-card">
+                    <div class="tech-logo-new irys-logo">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4M4 12c0 2.21 3.582 4 8 4s8-1.79 8-4"/></svg>
+                    </div>
+                    <h4>Irys / Arweave</h4>
+                    <p>Permanent, censorship-resistant data storage. Pay once, store forever with 200+ year guarantee.</p>
+                    <a href="https://irys.xyz" target="_blank" class="tech-link">
+                        irys.xyz
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>
+                    </a>
+                </div>
+                <div class="tech-card">
+                    <div class="tech-logo-new erc-logo">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"/></svg>
+                    </div>
+                    <h4>ERC-8004</h4>
+                    <p>On-chain agent identity registration on Ethereum Sepolia. Transparent and auditable.</p>
+                    <a href="https://github.com/ethereum/EIPs/issues/8004" target="_blank" class="tech-link">
+                        EIP-8004
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>
+                    </a>
+                </div>
+                <div class="tech-card">
+                    <div class="tech-logo-new hyper-logo">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
+                    </div>
+                    <h4>Hypercerts</h4>
+                    <p>Verifiable ERC-1155 impact receipts for every protection action. Proof of real-world value.</p>
+                    <a href="https://hypercerts.org" target="_blank" class="tech-link">
+                        hypercerts.org
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════
+         ARCHITECTURE — Simple visual flow
+         ═══════════════════════════════════════════════════ -->
+    <section class="arch-landing" id="architecture">
+        <div class="section-container">
+            <div class="section-header centered">
+                <span class="section-tag">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+                    UNDER THE HOOD
+                </span>
+                <h2 class="section-title">System Architecture</h2>
+                <p class="section-desc">A Python autonomous brain delegates to a TypeScript orchestrator that executes each pipeline stage.</p>
+            </div>
+            <div class="arch-visual-new">
+                <div class="arch-layer">
+                    <div class="arch-node-new brain-accent">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                        <div>
+                            <strong>Python Brain</strong>
+                            <span>Autonomous loop &middot; Discovery &middot; Planning &middot; Safety Guardrails</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="arch-connector-v">
+                    <div class="arch-line-v"></div>
+                    <span class="arch-label">subprocess call</span>
+                </div>
+                <div class="arch-layer">
+                    <div class="arch-node-new orch-accent">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                        <div>
+                            <strong>TypeScript Orchestrator</strong>
+                            <span>Executes 5-stage protection pipeline</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="arch-connector-v">
+                    <div class="arch-line-v"></div>
+                    <span class="arch-label">module execution</span>
+                </div>
+                <div class="arch-layer arch-modules-layer">
+                    <div class="arch-chip">Impulse AI</div>
+                    <div class="arch-chip">Noir ZK</div>
+                    <div class="arch-chip">Irys</div>
+                    <div class="arch-chip">ERC-8004</div>
+                    <div class="arch-chip">Hypercerts</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════
+         CTA — Final call to action
+         ═══════════════════════════════════════════════════ -->
+    <section class="cta-section">
+        <div class="section-container">
+            <div class="cta-card-new">
+                <div class="cta-shield">
+                    <svg width="48" height="56" viewBox="0 0 64 72" fill="none">
+                        <path d="M32 4L56 16V40C56 52 45.5 62.5 32 68C18.5 62.5 8 52 8 40V16L32 4Z"
+                              stroke="url(#ctaShield)" stroke-width="2" fill="rgba(0,240,255,0.05)"/>
+                        <path d="M28 38L24 34L20 38L28 46L44 30L40 26L28 38Z" fill="#00F0FF"/>
+                        <defs><linearGradient id="ctaShield" x1="8" y1="4" x2="56" y2="68"><stop stop-color="#00F0FF"/><stop offset="1" stop-color="#7B61FF"/></linearGradient></defs>
+                    </svg>
+                </div>
+                <h2>Ready to Guard Your Data?</h2>
+                <p>Connect your wallet and let Aegis autonomously protect, prove, and archive your sensitive files.</p>
+                <div class="cta-buttons">
+                    <button class="btn btn-primary btn-xl" id="btnConnectCTA">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="14" rx="2"/><path d="M2 10h20"/><circle cx="17" cy="16" r="1.5" fill="currentColor" stroke="none"/></svg>
+                        Connect Wallet
+                    </button>
+                    <a href="https://github.com/IrrhammCode/AegisAgent" target="_blank" class="btn btn-ghost btn-xl">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+                        Star on GitHub
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer-landing">
+        <div class="section-container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <div class="footer-logo">
+                        <svg width="24" height="24" viewBox="0 0 32 32" fill="none">
+                            <path d="M16 2L28 8V24L16 30L4 24V8L16 2Z" stroke="url(#fLogoGrad)" stroke-width="2" fill="none"/>
+                            <path d="M16 12L19 13.5V18.5L16 20L13 18.5V13.5L16 12Z" fill="url(#fLogoGrad)"/>
+                            <defs><linearGradient id="fLogoGrad" x1="4" y1="2" x2="28" y2="30"><stop stop-color="#00F0FF"/><stop offset="1" stop-color="#7B61FF"/></linearGradient></defs>
+                        </svg>
+                        <strong>Aegis ZK-Sentinel</strong>
+                    </div>
+                    <p>Autonomous guardian for digital rights. Built for PL_Genesis 2026.</p>
+                </div>
+                <div class="footer-links-col">
+                    <h5>Technology</h5>
+                    <a href="https://docs.impulselabs.ai" target="_blank">Impulse AI</a>
+                    <a href="https://noir-lang.org" target="_blank">Noir</a>
+                    <a href="https://irys.xyz" target="_blank">Irys / Arweave</a>
+                    <a href="https://hypercerts.org" target="_blank">Hypercerts</a>
+                </div>
+                <div class="footer-links-col">
+                    <h5>Project</h5>
+                    <a href="https://github.com/IrrhammCode/AegisAgent" target="_blank">GitHub</a>
+                    <a href="dashboard.html">Dashboard</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <span>2026 Aegis ZK-Sentinel &middot; Agent Only + Infrastructure & Digital Rights</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Wallet Modal -->
+    <div class="modal-overlay" id="walletModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Connect Your Wallet</h3>
+                <button class="modal-close" id="modalClose">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <p class="modal-desc">Select a wallet to connect and access the Aegis dashboard.</p>
+            <div class="wallet-options">
+                <button class="wallet-option" id="walletMetaMask">
+                    <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                        <path d="M27.2 3L17.4 10.4L19.2 6L27.2 3Z" fill="#E17726"/>
+                        <path d="M4.8 3L14.5 10.5L12.8 6L4.8 3Z" fill="#E27625"/>
+                        <path d="M23.6 21.8L21 26L26.8 27.6L28.4 21.9L23.6 21.8Z" fill="#E27625"/>
+                        <path d="M3.6 21.9L5.2 27.6L11 26L8.4 21.8L3.6 21.9Z" fill="#E27625"/>
+                        <path d="M10.7 14.2L9.2 16.5L14.6 16.8L14.4 11L10.7 14.2Z" fill="#E27625"/>
+                        <path d="M21.3 14.2L17.5 10.9L17.4 16.8L22.8 16.5L21.3 14.2Z" fill="#E27625"/>
+                        <path d="M11 26L14.2 24.4L11.4 22L11 26Z" fill="#E27625"/>
+                        <path d="M17.8 24.4L21 26L20.6 22L17.8 24.4Z" fill="#E27625"/>
+                    </svg>
+                    <div>
+                        <strong>MetaMask</strong>
+                        <small>Connect with browser extension</small>
+                    </div>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+                </button>
+                <button class="wallet-option" id="walletWC">
+                    <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                        <rect width="32" height="32" rx="8" fill="#3B99FC"/>
+                        <path d="M9.8 12.4C12.8 9.5 19.2 9.5 22.2 12.4L22.6 12.8C22.7 12.9 22.7 13.1 22.6 13.2L21.4 14.4C21.3 14.5 21.2 14.5 21.1 14.4L20.6 13.9C18.4 11.8 13.6 11.8 11.4 13.9L10.8 14.5C10.7 14.6 10.6 14.6 10.5 14.5L9.3 13.3C9.2 13.2 9.2 13 9.3 12.9L9.8 12.4ZM24.4 14.6L25.5 15.7C25.6 15.8 25.6 16 25.5 16.1L20.5 21C20.4 21.1 20.2 21.1 20.1 21L16.8 17.7C16.75 17.65 16.7 17.65 16.65 17.7L13.4 21C13.3 21.1 13.1 21.1 13 21L8 16.1C7.9 16 7.9 15.8 8 15.7L9.1 14.6C9.2 14.5 9.4 14.5 9.5 14.6L12.8 17.9C12.85 17.95 12.9 17.95 12.95 17.9L16.2 14.6C16.3 14.5 16.5 14.5 16.6 14.6L19.9 17.9C19.95 17.95 20 17.95 20.05 17.9L23.3 14.6C23.4 14.5 23.6 14.5 23.7 14.6L24.4 14.6Z" fill="white"/>
+                    </svg>
+                    <div>
+                        <strong>WalletConnect</strong>
+                        <small>Scan QR with mobile wallet</small>
+                    </div>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+                </button>
+                <button class="wallet-option" id="walletDemo">
+                    <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                        <rect width="32" height="32" rx="8" fill="rgba(123,97,255,0.15)"/>
+                        <path d="M16 8v8l6 3" stroke="#7B61FF" stroke-width="2" stroke-linecap="round"/>
+                        <circle cx="16" cy="16" r="8" stroke="#7B61FF" stroke-width="1.5" fill="none"/>
+                    </svg>
+                    <div>
+                        <strong>Demo Mode</strong>
+                        <small>Explore without connecting a wallet</small>
+                    </div>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/landing.js"></script>
+</body>
+</html>

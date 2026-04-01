@@ -14,17 +14,15 @@ export interface AegisConfig {
     operatorPrivateKey: string;
     erc8004RegistryAddress: string;
 
-    // Irys / Arweave
+    // Arweave (Irys)
     irysNode: string;
     irysToken: string;
 
-    // Impulse AI
-    impulseApiKey: string;
-    impulseEndpoint: string;
-    impulseDeploymentId: string;
-
-    // Hypercerts
+    // Hypercerts & ATProto
     hypercertsEnvironment: string;
+    atpHandle: string;
+    atpPassword: string;
+    atpPdsUrl: string;
 
     // Agent
     maxComputeBudget: number;
@@ -50,11 +48,10 @@ export function loadConfig(): AegisConfig {
         irysNode: getEnv('IRYS_NODE', 'https://devnet.irys.xyz'),
         irysToken: getEnv('IRYS_TOKEN', 'ethereum'),
 
-        impulseApiKey: getEnv('IMPULSE_API_KEY', 'imp_demo_key'),
-        impulseEndpoint: getEnv('IMPULSE_ENDPOINT', 'https://inference.impulselabs.ai/infer'),
-        impulseDeploymentId: getEnv('IMPULSE_DEPLOYMENT_ID', 'aegis-classifier-v1'),
-
         hypercertsEnvironment: getEnv('HYPERCERTS_ENV', 'test'),
+        atpHandle: getEnv('ATP_HANDLE', 'aegis.agent.xyz'),
+        atpPassword: getEnv('ATP_PASSWORD', ''),
+        atpPdsUrl: getEnv('ATP_PDS_URL', 'https://bsky.social'),
 
         maxComputeBudget: parseFloat(getEnv('MAX_COMPUTE_BUDGET', '10.0')),
         storageDirectory: getEnv('STORAGE_DIRECTORY', './vault_data'),

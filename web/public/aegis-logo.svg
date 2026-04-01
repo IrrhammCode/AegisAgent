@@ -1,0 +1,57 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Cyan Color from the screenshot and our CSS -->
+    <linearGradient id="aegisCyan" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#00F0FF" />
+      <stop offset="1" stop-color="#00D6FF" /> <!-- Slight variance for depth, mostly solid cyan -->
+    </linearGradient>
+    
+    <!-- Glow effect for the outer hexagon -->
+    <filter id="neonGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+
+    <!-- Inner element glow -->
+    <filter id="innerGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="15" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- 
+    Outer Hexagon Outline
+    Points calculated for a perfect point-up/down hexagon:
+    (X: 512/2=256, Y: center=256, R: 220)
+    Angles: 30, 90, 150, 210, 270, 330
+  -->
+  <path d="M256 36 L446 146 L446 366 L256 476 L66 366 L66 146 Z" 
+        fill="none" 
+        stroke="url(#aegisCyan)" 
+        stroke-width="32" 
+        stroke-linejoin="miter" 
+        filter="url(#neonGlow)"/>
+
+  <!-- 
+    Inner dark region with slight transparency/glow
+    (The screenshot shows the inner area is dark, with a glowing core)
+  -->
+  <path d="M256 68 L418 162 L418 350 L256 444 L94 350 L94 162 Z" 
+        fill="#050508" 
+        opacity="0.8"/>
+        
+  <!-- 
+    Inner Glowing Hexagon / Core 
+    Matches the solid/bright core in the screenshot inside the outline
+  -->
+  <g filter="url(#innerGlow)">
+    <!-- A slightly larger, dimmer background hex for the core glow -->
+    <path d="M256 160 L336 206 L336 306 L256 352 L176 306 L176 206 Z" 
+          fill="#00F0FF" 
+          opacity="0.25"/>
+          
+    <!-- The actual solid bright core hexagon -->
+    <path d="M256 190 L313 223 L313 289 L256 322 L199 289 L199 223 Z" 
+          fill="url(#aegisCyan)"/>
+  </g>
+</svg>

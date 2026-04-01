@@ -33,14 +33,46 @@ HEARTBEAT_SECONDS = int(os.getenv("HEARTBEAT_SECONDS", "30"))
 MAX_RUNTIME_MINUTES = int(os.getenv("MAX_RUNTIME_MINUTES", "60"))
 TS_NODE_TIMEOUT = int(os.getenv("TS_NODE_TIMEOUT", "120"))
 
+# ─── Real Scanning Configuration ─────────────────────────────
+# Comma-separated list of directories the agent is authorized to scan
+SCAN_DIRECTORIES = [d.strip() for d in os.getenv("SCAN_DIRECTORIES", VAULT_DIR).split(',') if d.strip()]
+
+# GitHub configuration for real repo scanning
+GITHUB_TOKEN = os.getenv("GITHUB_TOKEN", "")
+GITHUB_REPOS = [r.strip() for r in os.getenv("GITHUB_REPOS", "").split(',') if r.strip()]
+
+# File extensions to scan
+SCANNABLE_EXTENSIONS = {
+    '.py', '.js', '.ts', '.tsx', '.jsx', '.json', '.yaml', '.yml',
+    '.env', '.cfg', '.ini', '.toml', '.conf', '.config',
+    '.txt', '.md', '.csv', '.log', '.xml', '.html',
+    '.sql', '.sh', '.bash', '.zsh', '.bat', '.ps1',
+    '.pem', '.key', '.crt', '.cer', '.pfx',
+    '.doc', '.docx', '.pdf', '.xls', '.xlsx',
+    '.png', '.jpg', '.jpeg', '.gif', '.svg', '.webp',
+    '.mp4', '.mov', '.zip', '.gz', '.tar',
+}
+
+# Directories to always skip during scanning
+SKIP_DIRS = {
+    '.git', 'node_modules', '__pycache__', '.next', '.nuxt',
+    'dist', 'build', '.cache', '.venv', 'venv', 'env',
+    '.expo', '.idea', '.vscode', 'coverage', '.turbo',
+    'vault_data_archived',
+}
+
+# Maximum file size to scan (5MB)
+MAX_FILE_SIZE = int(os.getenv("MAX_SCAN_FILE_SIZE", str(5 * 1024 * 1024)))
+
 
 # ─── Autonomous Agent Class ──────────────────────────────────
 
 class AegisAgent:
     """The autonomous decision-making brain of the Aegis ZK-Sentinel."""
 
-    def __init__(self):
+    def __init__(self, targets: list | None = None):
         self.start_time = datetime.now()
+        self.targets = targets or ['local']
         self.cycle_count = 0
         self.tasks_completed = 0
         self.tasks_failed = 0
@@ -111,35 +143,171 @@ class AegisAgent:
                 "HALTED": "🛑", "ERROR": "💥"}.get(status, "📋")
         print(f"  {icon} [{step}] {decision}")
 
+    # ─── Data Connectors ──────────────────────────────────────
+
+    def _sync_github(self):
+        """Clone user's real GitHub repositories for analysis."""
+        github_dir = os.path.join(VAULT_DIR, "github_sync")
+        Path(github_dir).mkdir(parents=True, exist_ok=True)
+
+        if not GITHUB_TOKEN or not GITHUB_REPOS:
+            self.log("SYNC", "GitHub: No token or repos configured. Using demo repo.", {
+                "target": "github",
+                "has_token": bool(GITHUB_TOKEN),
+                "repo_count": len(GITHUB_REPOS)
+            })
+            # Fallback: clone a small public repo for demo
+            demo_dir = os.path.join(github_dir, "demo-repo")
+            if not os.path.exists(demo_dir):
+                try:
+                    subprocess.run(
+                        ["git", "clone", "--depth", "1", "https://github.com/octocat/Spoon-Knife.git", demo_dir],
+                        check=True, capture_output=True, timeout=30
+                    )
+                    self.log("SYNC", "Cloned demo repo (octocat/Spoon-Knife) for testing.", {}, "SUCCESS")
+                except Exception as e:
+                    self.log("SYNC", f"Failed to clone demo repo: {e}", {}, "ERROR")
+            return
+
+        self.log("SYNC", f"Syncing {len(GITHUB_REPOS)} GitHub repo(s)...", {
+            "target": "github",
+            "repos": GITHUB_REPOS
+        })
+
+        for repo_slug in GITHUB_REPOS:
+            repo_name = repo_slug.split('/')[-1] if '/' in repo_slug else repo_slug
+            dest_dir = os.path.join(github_dir, repo_name)
+
+            # Build authenticated clone URL
+            if '/' in repo_slug:
+                clone_url = f"https://{GITHUB_TOKEN}@github.com/{repo_slug}.git"
+            else:
+                clone_url = f"https://{GITHUB_TOKEN}@github.com/{repo_slug}.git"
+
+            try:
+                if os.path.exists(dest_dir):
+                    # Pull latest changes
+                    self.log("SYNC", f"Pulling latest for {repo_name}...", {"repo": repo_slug})
+                    subprocess.run(
+                        ["git", "-C", dest_dir, "pull", "--ff-only"],
+                        check=True, capture_output=True, timeout=60
+                    )
+                else:
+                    # Shallow clone (depth 1 for speed)
+                    self.log("SYNC", f"Cloning {repo_slug}...", {"repo": repo_slug})
+                    subprocess.run(
+                        ["git", "clone", "--depth", "1", clone_url, dest_dir],
+                        check=True, capture_output=True, timeout=120
+                    )
+
+                self.log("SYNC", f"GitHub repository '{repo_name}' synced successfully.", {
+                    "repo": repo_slug, "path": dest_dir
+                }, "SUCCESS")
+
+            except subprocess.TimeoutExpired:
+                self.log("SYNC", f"Timeout cloning {repo_slug}", {"repo": repo_slug}, "ERROR")
+            except Exception as e:
+                self.log("SYNC", f"Failed to sync {repo_slug}: {e}", {"repo": repo_slug}, "ERROR")
+
     # ─── Stage 1: DISCOVER ────────────────────────────────────
 
     def discover(self) -> list:
-        """Autonomously scan the vault directory for new data assets."""
-        if not os.path.exists(VAULT_DIR):
-            self.log("DISCOVER", "Vault directory missing.", {"path": VAULT_DIR}, "ERROR")
-            return []
+        """Autonomously scan real data sources based on selected targets."""
+
+        # 1. Sync external sources first
+        if 'github' in self.targets:
+            self._sync_github()
+
+        # 2. Determine which directories to scan
+        scan_dirs = []
+
+        if 'local' in self.targets:
+            # Use configured SCAN_DIRECTORIES for real local scanning
+            for d in SCAN_DIRECTORIES:
+                abs_d = os.path.abspath(d)
+                if os.path.isdir(abs_d):
+                    scan_dirs.append(abs_d)
+                    self.log("DISCOVER", f"Added local scan directory: {abs_d}", {
+                        "directory": abs_d
+                    })
+                else:
+                    self.log("DISCOVER", f"Scan directory not found: {abs_d}", {
+                        "directory": abs_d
+                    }, "SKIPPED")
+
+        if 'github' in self.targets:
+            github_sync_path = os.path.join(VAULT_DIR, "github_sync")
+            if os.path.exists(github_sync_path):
+                scan_dirs.append(os.path.abspath(github_sync_path))
+
+        # Fallback to vault_data if nothing is configured
+        if not scan_dirs:
+            scan_dirs.append(os.path.abspath(VAULT_DIR))
 
         all_files = []
-        for root, _, files in os.walk(VAULT_DIR):
-            for f in files:
-                if f.startswith('.'):
-                    continue  # Skip hidden files
-                full_path = os.path.join(root, f)
-                file_hash = self._hash_file(full_path)
+        for scan_dir in scan_dirs:
+            if not os.path.exists(scan_dir):
+                continue
 
-                # Skip already-processed files (deduplication)
-                if file_hash in self.processed_hashes:
-                    continue
+            file_count = 0
+            for root, dirs, files in os.walk(scan_dir):
+                # Filter out directories we should skip
+                dirs[:] = [d for d in dirs if d not in SKIP_DIRS]
 
-                all_files.append({
-                    "file": f,
-                    "path": full_path,
-                    "size": os.path.getsize(full_path),
-                    "hash": file_hash
-                })
+                for f in files:
+                    if f.startswith('.'):
+                        continue
 
-        self.log("DISCOVER", f"Found {len(all_files)} new item(s) in vault.", {
-            "vault_path": VAULT_DIR,
+                    # Only scan known file types
+                    _, ext = os.path.splitext(f)
+                    if ext.lower() not in SCANNABLE_EXTENSIONS:
+                        continue
+
+                    full_path = os.path.join(root, f)
+
+                    # Skip archive directory
+                    if os.path.abspath(ARCHIVE_DIR) in os.path.abspath(full_path):
+                        continue
+
+                    # Skip files that are too large
+                    try:
+                        fsize = os.path.getsize(full_path)
+                        if fsize > MAX_FILE_SIZE:
+                            continue
+                        if fsize == 0:
+                            continue
+                    except OSError:
+                        continue
+
+                    file_hash = self._hash_file(full_path)
+
+                    # Skip already-processed files
+                    if file_hash in self.processed_hashes:
+                        continue
+
+                    # Determine source label
+                    if 'github_sync' in full_path:
+                        source = 'GitHub'
+                    else:
+                        source = 'Local FS'
+
+                    all_files.append({
+                        "file": f,
+                        "path": full_path,
+                        "size": fsize,
+                        "hash": file_hash,
+                        "source": source
+                    })
+                    file_count += 1
+
+            self.log("DISCOVER", f"Scanned {scan_dir}: found {file_count} new file(s).", {
+                "directory": scan_dir,
+                "new_files": file_count
+            })
+
+        self.log("DISCOVER", f"Total: {len(all_files)} new item(s) across {len(scan_dirs)} directory(ies).", {
+            "targets": self.targets,
+            "scan_dirs": scan_dirs,
             "total_items": len(all_files),
             "previously_processed": len(self.processed_hashes)
         })
@@ -211,9 +379,11 @@ class AegisAgent:
                     return False
             else:
                 # No structured output — log stderr for debugging
+                out_str = str(stdout) if stdout else ""
+                err_str = str(stderr) if stderr else ""
                 self.log("ERROR", f"No structured output from orchestrator for {file_name}", {
-                    "stdout_tail": stdout[-500:] if stdout else "",
-                    "stderr_tail": stderr[-500:] if stderr else ""
+                    "stdout_tail": out_str[-500:] if len(out_str) > 500 else out_str,
+                    "stderr_tail": err_str[-500:] if len(err_str) > 500 else err_str
                 }, "FAILED")
                 self.tasks_failed += 1
                 return False
@@ -261,6 +431,12 @@ class AegisAgent:
                 archive_path = os.path.join(ARCHIVE_DIR, f"{base}_{file_hash[:8]}{ext}")
 
             shutil.move(file_path, archive_path)
+            
+            # Move the Aegis Cipher encrypted file if it exists
+            enc_file_path = f"{file_path}.aegis.enc"
+            if os.path.exists(enc_file_path):
+                shutil.move(enc_file_path, f"{archive_path}.aegis.enc")
+                
             self.log("ARCHIVE", f"Moved {file_name} → {os.path.basename(archive_path)}", {
                 "source": file_path,
                 "destination": archive_path
@@ -430,12 +606,17 @@ Examples:
     )
     parser.add_argument('--once', action='store_true',
                         help='Run a single cycle and exit')
+    parser.add_argument('--watch', action='store_true',
+                        help='Enable continuous daemon monitoring mode')
     parser.add_argument('--status', action='store_true',
                         help='Show current agent status and exit')
+    parser.add_argument('--targets', type=str, default='local',
+                        help='Comma separated targets (e.g., github,local,gdrive,slack)')
 
     args = parser.parse_args()
+    targets = [t.strip().lower() for t in args.targets.split(',')]
 
-    agent = AegisAgent()
+    agent = AegisAgent(targets=targets)
 
     if args.status:
         agent.print_status()

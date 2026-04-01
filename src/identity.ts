@@ -9,6 +9,7 @@
 import { ethers } from 'ethers';
 import * as fs from 'fs';
 import * as path from 'path';
+import { BskyAgent } from '@atproto/api';
 import { config } from './utils/config';
 import { logInfo, logDebug, logWarn, logError } from './utils/logger';
 
@@ -53,6 +54,11 @@ export interface AgentIdentity {
     registeredOnChain: boolean;
     network: string;
     timestamp: string;
+    atprotoRecord?: {
+        handle: string;
+        did: string;
+        pds: string;
+    };
 }
 
 // ─── Registration File Builder ───────────────────────────────
@@ -90,26 +96,56 @@ export function buildRegistrationFile(): object {
     };
 }
 
+// ─── ATProto Identity ──────────────────────────────────────────
+
+export async function resolveAtprotoIdentity(): Promise<AgentIdentity['atprotoRecord'] | undefined> {
+    if (!config.atpHandle || !config.atpPassword) {
+        logWarn(MODULE, 'ATProto credentials not configured. Skipping ATProto identity resolution.');
+        return undefined;
+    }
+
+    try {
+        logInfo(MODULE, `Resolving ATProto identity for: ${config.atpHandle}...`);
+        const agent = new BskyAgent({ service: config.atpPdsUrl });
+        await agent.login({ identifier: config.atpHandle, password: config.atpPassword });
+        const did = agent.session?.did;
+
+        if (did) {
+            logInfo(MODULE, `Resolved DID: ${did}`);
+            return {
+                handle: config.atpHandle,
+                did: did,
+                pds: config.atpPdsUrl
+            };
+        } else {
+            logError(MODULE, 'Failed to resolve DID after successful login.');
+            return undefined;
+        }
+    } catch (error: any) {
+        logError(MODULE, `ATProto resolution failed: ${error.message}`);
+        return undefined;
+    }
+}
+
 // ─── Core Registration ───────────────────────────────────────
 
 export async function registerAgentIdentity(metadataURI: string): Promise<AgentIdentity> {
-    logInfo(MODULE, 'Initiating ERC-8004 identity verification...');
+    logInfo(MODULE, 'Initiating identity verification...');
 
-    // Demo mode — return a mock identity
-    if (config.isDemoMode) {
-        logWarn(MODULE, 'Demo mode — generating mock Agent ID.');
+    // Resolve ATProto Identity First
+    const atprotoRecord = await resolveAtprotoIdentity();
 
-        const mockWallet = ethers.Wallet.createRandom();
-        const mockId = `AEGIS-${Date.now().toString(36).toUpperCase()}`;
-
+    if (!config.operatorPrivateKey) {
+        logWarn(MODULE, 'No private key provided. Falling back to Demo Identity.');
         return {
-            agentId: mockId,
+            agentId: `AEGIS-DEMO-${Date.now().toString(36).toUpperCase()}`,
             agentRegistry: `eip155:11155111:${SEPOLIA_REGISTRIES.identity}`,
-            operatorAddress: mockWallet.address,
+            operatorAddress: 'DEMO_WALLET',
             metadataURI,
             registeredOnChain: false,
             network: 'sepolia',
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
+            atprotoRecord
         };
     }
 
@@ -152,7 +188,8 @@ export async function registerAgentIdentity(metadataURI: string): Promise<AgentI
                     metadataURI: tokenURI,
                     registeredOnChain: true,
                     network: 'sepolia',
-                    timestamp: new Date().toISOString()
+                    timestamp: new Date().toISOString(),
+                    atprotoRecord
                 };
             }
         }
@@ -180,7 +217,8 @@ export async function registerAgentIdentity(metadataURI: string): Promise<AgentI
             metadataURI,
             registeredOnChain: true,
             network: 'sepolia',
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
+            atprotoRecord
         };
 
     } catch (error: any) {
@@ -194,7 +232,8 @@ export async function registerAgentIdentity(metadataURI: string): Promise<AgentI
             metadataURI,
             registeredOnChain: false,
             network: 'sepolia',
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
+            atprotoRecord
         };
     }
 }

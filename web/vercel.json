@@ -1,0 +1,6 @@
+{
+  "rewriteRuntime": "node",
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}

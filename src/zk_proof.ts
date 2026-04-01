@@ -9,7 +9,7 @@
 import * as crypto from 'crypto';
 import * as fs from 'fs';
 import * as path from 'path';
-import { sha256, sha256File, hexToBytes32 } from './utils/crypto';
+import { sha256, sha256File, hexToBytes32, stringToBytes32 } from './utils/crypto';
 import { logInfo, logDebug, logWarn, logError } from './utils/logger';
 
 const MODULE = 'ZK-Noir';
@@ -75,26 +75,27 @@ export async function generateIntegrityProof(
 
     logInfo(MODULE, 'Initiating integrity proof generation...');
 
-    // Compute the hash of the data
+    // Compute the hash of the data (using a 32-byte chunk for ZK compatibility)
     let dataHash: string;
-    let dataPreview: string;
+    let dataBytes: number[];
 
     if (mode === 'file' && fs.existsSync(dataOrFilePath)) {
-        dataHash = sha256File(dataOrFilePath);
-        dataPreview = path.basename(dataOrFilePath);
+        const content = fs.readFileSync(dataOrFilePath);
+        dataBytes = stringToBytes32(content);
+        dataHash = sha256(Buffer.from(dataBytes));
     } else {
-        dataHash = sha256(dataOrFilePath);
-        dataPreview = dataOrFilePath.slice(0, 20) + '...';
+        dataBytes = stringToBytes32(dataOrFilePath);
+        dataHash = sha256(Buffer.from(dataBytes));
     }
 
-    logDebug(MODULE, `Data hash computed: ${dataHash.slice(0, 16)}...`);
+    logDebug(MODULE, `Data hash computed (32-byte chunk): ${dataHash.slice(0, 16)}...`);
 
     // Attempt real Noir proof generation
     let proof: string;
     let verified = false;
 
     try {
-        const result = await generateRealNoirProof(dataHash);
+        const result = await generateRealNoirProof(dataBytes, dataHash);
         proof = result.proof;
         verified = result.verified;
         logInfo(MODULE, 'Real Noir proof generated and verified.');
@@ -126,7 +127,7 @@ export async function generateIntegrityProof(
 
 // ─── Real Noir Proof (requires @noir-lang packages) ──────────
 
-async function generateRealNoirProof(dataHash: string): Promise<{
+async function generateRealNoirProof(dataBytes: number[], dataHash: string): Promise<{
     proof: string;
     verified: boolean;
 }> {
@@ -150,10 +151,10 @@ async function generateRealNoirProof(dataHash: string): Promise<{
     const noir = new Noir(circuitArtifact);
 
     // Prepare inputs
-    const dataBytes = hexToBytes32(dataHash);
+    const hashBytes = hexToBytes32(dataHash);
     const inputs = {
         data: dataBytes,
-        expected_hash: dataBytes  // Proving knowledge of the preimage
+        expected_hash: hashBytes 
     };
 
     // Generate witness and proof

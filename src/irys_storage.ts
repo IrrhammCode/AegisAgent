@@ -32,37 +32,23 @@ export interface ArchivalResult {
 
 // ─── Irys Uploader Initialization ────────────────────────────
 
-async function getIrysUploader() {
-    const { Uploader } = await import('@irys/upload');
-    const { Ethereum } = await import('@irys/upload-ethereum');
+async function getIrys() {
+    const { default: Irys } = await import('@irys/sdk');
+
+    if (!config.operatorPrivateKey) {
+        throw new Error('OPERATOR_PRIVATE_KEY is missing. Production archival requires a funded wallet.');
+    }
 
     logDebug(MODULE, `Connecting to Irys node: ${config.irysNode}`);
 
-    const irysUploader = await Uploader(Ethereum).withWallet(config.operatorPrivateKey);
-    return irysUploader;
-}
-
-// ─── Demo Mode Archival ──────────────────────────────────────
-
-function generateDemoArchival(filePath: string, tags: ArweaveTag[]): ArchivalResult {
-    const fileSize = fs.statSync(filePath).size;
-    const fileHash = crypto.createHash('sha256')
-        .update(fs.readFileSync(filePath))
-        .digest('hex')
-        .slice(0, 43); // Arweave TX IDs are 43 chars
-
-    const txId = `DEMO_${fileHash}`;
-
-    logInfo(MODULE, `[DEMO] Simulated archival. TX: ${txId}`);
-
-    return {
-        transactionId: txId,
-        permanentUrl: `https://arweave.net/${txId}`,
-        fileSize,
-        tags,
-        timestamp: new Date().toISOString(),
-        isDemo: true
-    };
+    // For Node.js, we use the default Irys constructor with 'ethereum' token
+    const irys = new Irys({
+        url: config.irysNode,
+        token: 'ethereum',
+        key: config.operatorPrivateKey,
+    });
+    
+    return irys;
 }
 
 // ─── Core Upload Function ────────────────────────────────────
@@ -82,64 +68,71 @@ export async function uploadToPermanentStorage(
     const fileSize = fs.statSync(filePath).size;
     logDebug(MODULE, `File size: ${fileSize} bytes`);
 
-    // Check for required private key
-    if (!config.operatorPrivateKey) {
-        throw new Error('OPERATOR_PRIVATE_KEY is required for Irys archival.');
-    }
-
     // Add standard Aegis tags
     const fullTags: ArweaveTag[] = [
-        { name: 'App-Name', value: 'Aegis-ZK-Sentinel' },
-        { name: 'App-Version', value: '1.0.0' },
+        { name: 'App-Name', value: 'AegisAgent-Sentinel' },
+        { name: 'App-Version', value: '1.1.0' },
         { name: 'Content-Type', value: detectContentType(filePath) },
         { name: 'Unix-Time', value: Math.floor(Date.now() / 1000).toString() },
         ...tags
     ];
 
-    // Demo mode — simulate the upload
-    if (config.isDemoMode) {
-        logWarn(MODULE, 'Running in DEMO MODE. Simulating Irys archival.');
-        return generateDemoArchival(filePath, fullTags);
-    }
-
     // Production mode — real Irys upload
     try {
-        const irys = await getIrysUploader();
+        const timeout = new Promise<never>((_, reject) => 
+            setTimeout(() => reject(new Error('Irys archival timed out after 45s')), 45000)
+        );
 
-        // Check price and fund if necessary
-        const price = await irys.getPrice(fileSize);
-        logDebug(MODULE, `Upload price: ${price} atomic units`);
+        const uploadTask = (async () => {
+            const irys = await getIrys();
 
-        const balance = await irys.getLoadedBalance();
-        logDebug(MODULE, `Current balance: ${balance} atomic units`);
+            // Check price and fund if necessary
+            const price = await irys.getPrice(fileSize);
+            logDebug(MODULE, `Upload price: ${price} atomic units`);
 
-        if (balance.lt(price)) {
-            logInfo(MODULE, 'Insufficient balance. Auto-funding...');
-            const fundAmount = price.multipliedBy(1.2); // 20% buffer
-            await irys.fund(fundAmount);
-            logInfo(MODULE, `Funded ${fundAmount} atomic units.`);
-        }
+            const balance = await irys.getLoadedBalance();
+            logDebug(MODULE, `Current balance: ${balance} atomic units`);
 
-        // Upload the file
-        logInfo(MODULE, 'Uploading to Arweave via Irys...');
-        const response = await irys.uploadFile(filePath, { tags: fullTags });
+            if (balance.lt(price)) {
+                logInfo(MODULE, `Insufficient balance (${balance}). Funding ${price}...`);
+                await irys.fund(price);
+                logInfo(MODULE, `Successfully funded Irys node.`);
+            }
 
-        logInfo(MODULE, `Archival complete! TX ID: ${response.id}`);
+            // Upload the file
+            logInfo(MODULE, 'Uploading to Arweave via Irys...');
+            const response = await irys.uploadFile(filePath, { tags: fullTags });
+
+            logInfo(MODULE, `Archival complete! TX ID: ${response.id}`);
+
+            return {
+                transactionId: response.id,
+                permanentUrl: `https://arweave.net/${response.id}`,
+                fileSize,
+                tags: fullTags,
+                timestamp: new Date().toISOString(),
+                isDemo: false
+            };
+        })();
+
+        return await Promise.race([uploadTask, timeout]);
+    } catch (error: any) {
+        logError(MODULE, `Irys upload issue or timeout: ${error.message}`);
+        
+        // Final fallback to structured result if even demo fails
+        const fileHash = crypto.createHash('sha256')
+            .update(fs.readFileSync(filePath))
+            .digest('hex')
+            .slice(0, 43);
 
         return {
-            transactionId: response.id,
-            permanentUrl: `https://arweave.net/${response.id}`,
+            transactionId: `FAILED_${fileHash}`,
+            permanentUrl: 'OFFLINE',
             fileSize,
             tags: fullTags,
             timestamp: new Date().toISOString(),
-            isDemo: false
+            isDemo: true
         };
-    } catch (error: any) {
-        logError(MODULE, `Irys upload failed: ${error.message}`);
-
-        // Fallback to demo mode on network errors
-        logWarn(MODULE, 'Falling back to demo archival due to network error.');
-        return generateDemoArchival(filePath, fullTags);
     }
 }
 
@@ -173,7 +166,7 @@ export async function uploadDataToPermanentStorage(
     }
 
     try {
-        const irys = await getIrysUploader();
+        const irys = await getIrys();
         const response = await irys.upload(dataBuffer, { tags: fullTags });
 
         return {

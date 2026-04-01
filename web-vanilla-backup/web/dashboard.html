@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aegis Dashboard — Agent Control Center</title>
+    <meta name="description" content="Monitor and control the Aegis ZK-Sentinel autonomous agent. View protected assets, ZK proofs, and impact receipts.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body>
+    <!-- Ambient Background -->
+    <div class="ambient-bg">
+        <div class="ambient-orb orb-1"></div>
+        <div class="ambient-orb orb-2"></div>
+        <div class="ambient-orb orb-3"></div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="nav-brand">
+            <a href="index.html" class="nav-logo-link">
+                <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                    <path d="M16 2L28 8V24L16 30L4 24V8L16 2Z" stroke="url(#dLogoGrad)" stroke-width="2" fill="none"/>
+                    <path d="M16 8L22 11V21L16 24L10 21V11L16 8Z" fill="url(#dLogoGrad)" opacity="0.3"/>
+                    <path d="M16 12L19 13.5V18.5L16 20L13 18.5V13.5L16 12Z" fill="url(#dLogoGrad)"/>
+                    <defs><linearGradient id="dLogoGrad" x1="4" y1="2" x2="28" y2="30"><stop stop-color="#00F0FF"/><stop offset="1" stop-color="#7B61FF"/></linearGradient></defs>
+                </svg>
+            </a>
+            <span class="nav-title">AEGIS</span>
+            <span class="nav-badge">DASHBOARD</span>
+        </div>
+        <div class="nav-links">
+            <a href="#overview" class="nav-link active">Overview</a>
+            <a href="#pipeline" class="nav-link">Pipeline</a>
+            <a href="#activity" class="nav-link">Activity</a>
+            <a href="#assets" class="nav-link">Assets</a>
+        </div>
+        <div class="nav-wallet-info">
+            <div class="wallet-indicator">
+                <div class="status-dot pulse"></div>
+                <span id="navWalletAddr">Not Connected</span>
+            </div>
+            <button class="btn btn-sm btn-disconnect" id="btnDisconnect">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+                Disconnect
+            </button>
+        </div>
+    </nav>
+
+    <!-- Wallet Guard (shown if not connected) -->
+    <div class="wallet-guard" id="walletGuard">
+        <div class="guard-content">
+            <svg width="64" height="72" viewBox="0 0 64 72" fill="none">
+                <path d="M32 4L56 16V40C56 52 45.5 62.5 32 68C18.5 62.5 8 52 8 40V16L32 4Z"
+                      stroke="url(#guardGrad)" stroke-width="2" fill="rgba(0,240,255,0.04)"/>
+                <path d="M28 38L24 34L20 38L28 46L44 30L40 26L28 38Z" fill="#00F0FF"/>
+                <defs><linearGradient id="guardGrad" x1="8" y1="4" x2="56" y2="68"><stop stop-color="#00F0FF"/><stop offset="1" stop-color="#7B61FF"/></linearGradient></defs>
+            </svg>
+            <h2>Wallet Required</h2>
+            <p>Connect your wallet to access the Aegis Dashboard and monitor your protected assets.</p>
+            <a href="index.html" class="btn btn-primary">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+                Back to Landing Page
+            </a>
+        </div>
+    </div>
+
+    <!-- Dashboard Content (hidden until wallet connected) -->
+    <main class="dashboard-main" id="dashboardMain" style="display: none">
+
+        <!-- Welcome Bar -->
+        <section class="welcome-bar">
+            <div class="welcome-content">
+                <div>
+                    <h1 class="welcome-title">Agent Control Center</h1>
+                    <p class="welcome-desc">Monitor, manage, and run protection cycles on your digital assets.</p>
+                </div>
+                <button class="btn btn-primary" id="btnRunCycle">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5,3 19,12 5,21" fill="currentColor"/></svg>
+                    Run Protection Cycle
+                </button>
+            </div>
+        </section>
+
+        <!-- Stats -->
+        <section class="stats-section" id="overview">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon" style="--accent: #00F0FF">
+                        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-value" id="filesProtected">0</span>
+                        <span class="stat-label">Files Protected</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="--accent: #7B61FF">
+                        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-value" id="zkProofsGenerated">0</span>
+                        <span class="stat-label">ZK Proofs Generated</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="--accent: #FF6B6B">
+                        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"/></svg>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-value" id="bytesArchived">0</span>
+                        <span class="stat-label">Bytes Archived</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="--accent: #FFD93D">
+                        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-value" id="impactReceipts">0</span>
+                        <span class="stat-label">Impact Receipts</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Pipeline Visualizer -->
+        <section class="pipeline-section" id="pipeline">
+            <div class="section-header">
+                <h2 class="section-title">5-Stage Pipeline</h2>
+                <p class="section-desc">Real-time view of the autonomous protection flow.</p>
+            </div>
+            <div class="pipeline-container">
+                <div class="pipeline-track">
+                    <div class="pipeline-line"></div>
+                    <div class="pipeline-progress" id="pipelineProgress"></div>
+                </div>
+                <div class="pipeline-stages">
+                    <div class="stage" data-stage="1" id="stage1">
+                        <div class="stage-node"><div class="stage-icon">
+                            <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                        </div></div>
+                        <div class="stage-info">
+                            <span class="stage-number">STAGE 1</span>
+                            <h3 class="stage-name">Intelligence</h3>
+                            <span class="stage-tech">Impulse AI</span>
+                            <p class="stage-desc">ML-driven sensitivity classification. Detects PII, credentials, financial data.</p>
+                        </div>
+                    </div>
+                    <div class="stage" data-stage="2" id="stage2">
+                        <div class="stage-node"><div class="stage-icon">
+                            <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                        </div></div>
+                        <div class="stage-info">
+                            <span class="stage-number">STAGE 2</span>
+                            <h3 class="stage-name">Privacy</h3>
+                            <span class="stage-tech">Noir ZK-Proofs</span>
+                            <p class="stage-desc">Zero-knowledge integrity proof. Verifies data without revealing contents.</p>
+                        </div>
+                    </div>
+                    <div class="stage" data-stage="3" id="stage3">
+                        <div class="stage-node"><div class="stage-icon">
+                            <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"/></svg>
+                        </div></div>
+                        <div class="stage-info">
+                            <span class="stage-number">STAGE 3</span>
+                            <h3 class="stage-name">Infrastructure</h3>
+                            <span class="stage-tech">Irys / Arweave</span>
+                            <p class="stage-desc">Permanent, censorship-resistant archival. Data lives forever on-chain.</p>
+                        </div>
+                    </div>
+                    <div class="stage" data-stage="4" id="stage4">
+                        <div class="stage-node"><div class="stage-icon">
+                            <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"/></svg>
+                        </div></div>
+                        <div class="stage-info">
+                            <span class="stage-number">STAGE 4</span>
+                            <h3 class="stage-name">Identity</h3>
+                            <span class="stage-tech">ERC-8004</span>
+                            <p class="stage-desc">On-chain agent registration. Verifiable, portable, censorship-resistant ID.</p>
+                        </div>
+                    </div>
+                    <div class="stage" data-stage="5" id="stage5">
+                        <div class="stage-node"><div class="stage-icon">
+                            <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
+                        </div></div>
+                        <div class="stage-info">
+                            <span class="stage-number">STAGE 5</span>
+                            <h3 class="stage-name">Impact</h3>
+                            <span class="stage-tech">Hypercerts</span>
+                            <p class="stage-desc">Verifiable on-chain impact receipt. Permanent proof of the agent's work.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Activity -->
+        <section class="logs-section" id="activity">
+            <div class="section-header">
+                <h2 class="section-title">Agent Activity</h2>
+                <div class="log-controls">
+                    <button class="btn btn-sm" id="btnRefreshLogs">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+                        Refresh
+                    </button>
+                    <button class="btn btn-sm" id="btnClearLogs">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                        Clear
+                    </button>
+                </div>
+            </div>
+            <div class="terminal">
+                <div class="terminal-header">
+                    <div class="terminal-dots">
+                        <span class="dot red"></span>
+                        <span class="dot yellow"></span>
+                        <span class="dot green"></span>
+                    </div>
+                    <span class="terminal-title">agent_log.json</span>
+                    <span class="terminal-live">
+                        <span class="live-dot"></span>
+                        LIVE
+                    </span>
+                </div>
+                <div class="terminal-body" id="terminalBody">
+                    <div class="terminal-line system">
+                        <span class="timestamp">[SYSTEM]</span>
+                        <span class="message">Dashboard initialized. Waiting for agent data...</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Protected Assets -->
+        <section class="assets-section" id="assets">
+            <div class="section-header">
+                <h2 class="section-title">Protected Assets</h2>
+                <p class="section-desc">Files classified, ZK-proved, and permanently archived.</p>
+            </div>
+            <div class="table-container">
+                <table class="assets-table">
+                    <thead>
+                        <tr>
+                            <th>File</th>
+                            <th>Category</th>
+                            <th>ZK Proof</th>
+                            <th>Arweave TX</th>
+                            <th>Impact</th>
+                            <th>Time</th>
+                        </tr>
+                    </thead>
+                    <tbody id="assetsTableBody"></tbody>
+                </table>
+                <div class="table-empty visible" id="tableEmpty">
+                    <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24" opacity="0.3"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                    <p>No assets protected yet. Click "Run Protection Cycle" to begin.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer" id="dashboardFooter" style="display: none">
+        <div class="footer-content">
+            <div class="footer-brand">
+                <strong>Aegis ZK-Sentinel</strong>
+                <span>PL_Genesis 2026</span>
+            </div>
+            <div class="footer-links">
+                <a href="https://github.com/IrrhammCode/AegisAgent" target="_blank">GitHub</a>
+                <span class="footer-sep">|</span>
+                <span>Agent Only + Infrastructure & Digital Rights</span>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/app.js"></script>
+    <script src="js/dashboard-guard.js"></script>
+</body>
+</html>

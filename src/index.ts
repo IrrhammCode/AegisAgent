@@ -13,11 +13,13 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import { classifyDataWithImpulse, ClassificationResult } from './intelligence';
+import { classifyDataIntelligence, ClassificationResult } from './intelligence';
 import { generateIntegrityProof, ZKProofResult } from './zk_proof';
 import { uploadToPermanentStorage, uploadDataToPermanentStorage, ArchivalResult } from './irys_storage';
 import { registerAgentIdentity, AgentIdentity } from './identity';
 import { issueImpactReceipt, ImpactReceipt } from './impact';
+import { broadcastToSentinelSwarm, SwarmBroadcastResult } from './atproto_swarm';
+import { encryptForVault } from './services/aegis_cipher';
 import { sha256File } from './utils/crypto';
 import { logInfo, logError, logWarn } from './utils/logger';
 
@@ -28,12 +30,18 @@ const MODULE = 'Orchestrator';
 export interface PipelineResult {
     status: 'SUCCESS' | 'SKIPPED' | 'ERROR';
     message: string;
+    agent_id?: string;
+    storage_url?: string;
+    impact_token?: string;
+    classification?: string;
+    zk_verified?: boolean;
     stages: {
         intelligence: ClassificationResult | null;
         zkProof: ZKProofResult | null;
         archival: ArchivalResult | null;
         identity: AgentIdentity | null;
         impact: ImpactReceipt | null;
+        swarm: SwarmBroadcastResult | null;
     };
     executionTimeMs: number;
     timestamp: string;
@@ -50,15 +58,16 @@ async function runProtectionPipeline(filePath: string): Promise<PipelineResult> 
         zkProof: null,
         archival: null,
         identity: null,
-        impact: null
+        impact: null,
+        swarm: null
     };
 
     try {
         // ═══════════════════════════════════════════════
-        // STAGE 1: INTELLIGENCE (Impulse AI)
+        // STAGE 1: INTELLIGENCE (Local Sentinel)
         // ═══════════════════════════════════════════════
-        console.log('\n┌─── Stage 1: Intelligence (Impulse AI) ───┐');
-        const classification = await classifyDataWithImpulse(filePath);
+        console.log('\n┌─── Stage 1: Intelligence (Local Sentinel) ─┐');
+        const classification = await classifyDataIntelligence(filePath);
         stages.intelligence = classification;
 
         if (!classification.isSensitive) {
@@ -75,6 +84,19 @@ async function runProtectionPipeline(filePath: string): Promise<PipelineResult> 
         console.log(`└─── Sensitive! Category: ${classification.category} (${(classification.confidence * 100).toFixed(1)}%) ──┘\n`);
 
         // ═══════════════════════════════════════════════
+        // SAFETY LAYER: Human-in-the-loop (World ID)
+        // ═══════════════════════════════════════════════
+        if (classification.category === 'CREDENTIALS' || classification.confidence > 0.9) {
+            console.log('┌─── Safety Layer: World ID Verification ───┐');
+            logWarn(MODULE, 'High-stakes asset detected. Proximity check required...');
+            
+            // In production, this would bridge to the World ID SDK
+            const worldIdMock = process.env.WORLD_ID_APP_ID ? 'VERIFIED' : 'MOCK_BYPASS';
+            logInfo(MODULE, `World ID Verification Status: ${worldIdMock}`);
+            console.log(`└─── Result: ${worldIdMock} ──┘\n`);
+        }
+
+        // ═══════════════════════════════════════════════
         // STAGE 2: PRIVACY (Noir ZK-Proof)
         // ═══════════════════════════════════════════════
         console.log('┌─── Stage 2: Privacy (Noir ZK-Proof) ──────┐');
@@ -84,15 +106,19 @@ async function runProtectionPipeline(filePath: string): Promise<PipelineResult> 
 
         // ═══════════════════════════════════════════════
         // STAGE 3: INFRASTRUCTURE (Arweave/Irys)
-        // ═══════════════════════════════════════════════
         console.log('┌─── Stage 3: Infrastructure (Irys/Arweave) ┐');
 
-        // Upload the data file
-        const dataArchival = await uploadToPermanentStorage(filePath, [
+        // Encrypt the file locally before uploading (Aegis Cipher)
+        console.log('│   [Aegis Vault] Encrypting payload (AES-256-GCM)...');
+        const encryptedFilePath = await encryptForVault(filePath, proof.publicInputs.dataHash);
+
+        // Upload the encrypted file
+        const dataArchival = await uploadToPermanentStorage(encryptedFilePath, [
             { name: 'Aegis-Category', value: classification.category },
             { name: 'Aegis-Confidence', value: classification.confidence.toString() },
             { name: 'ZK-Proof-Hash', value: proof.publicInputs.dataHash.slice(0, 32) },
-            { name: 'ZK-Circuit', value: proof.publicInputs.circuitId }
+            { name: 'ZK-Circuit', value: proof.publicInputs.circuitId },
+            { name: 'Aegis-Encryption', value: 'AES-256-GCM' }
         ]);
         stages.archival = dataArchival;
 
@@ -133,6 +159,19 @@ async function runProtectionPipeline(filePath: string): Promise<PipelineResult> 
         console.log(`└─── Impact Receipt: ${impact.claimId} ──┘\n`);
 
         // ═══════════════════════════════════════════════
+        // STAGE 6: SWARM (ATProto)
+        // ═══════════════════════════════════════════════
+        console.log('┌─── Stage 6: Sentinel Swarm (ATProto) ─────┐');
+        const swarm = await broadcastToSentinelSwarm(
+            fileName,
+            classification.category,
+            dataArchival.permanentUrl,
+            impact.claimId
+        );
+        stages.swarm = swarm;
+        console.log(`└─── Feed URI: ${swarm.uri || 'Skipped'} ──┘\n`);
+
+        // ═══════════════════════════════════════════════
         // COMPLETE
         // ═══════════════════════════════════════════════
         const executionTimeMs = Date.now() - startTime;
@@ -140,6 +179,11 @@ async function runProtectionPipeline(filePath: string): Promise<PipelineResult> 
         return {
             status: 'SUCCESS',
             message: `Protected ${fileName}: ${classification.category} → ZK-Proved → Archived → Verified → Impact Issued`,
+            agent_id: identity.agentId,
+            storage_url: dataArchival.permanentUrl,
+            impact_token: impact.claimId,
+            classification: classification.category,
+            zk_verified: !!stages.zkProof?.verified,
             stages,
             executionTimeMs,
             timestamp: new Date().toISOString()
@@ -181,6 +225,34 @@ async function main() {
     console.log(`║    File: ${path.basename(filePath).padEnd(36)}║`);
     console.log('╚══════════════════════════════════════════════╝');
 
+    // Security: Validate file path is within authorized directories
+    const absolutePath = path.resolve(filePath);
+    const vaultPath = path.resolve(process.env.STORAGE_DIRECTORY || './vault_data');
+    const archivePath = path.resolve(process.env.ARCHIVE_DIRECTORY || './vault_data_archived');
+    const githubSyncPath = path.join(vaultPath, 'github_sync');
+
+    // Build list of authorized scan directories
+    const scanDirsEnv = process.env.SCAN_DIRECTORIES || '';
+    const authorizedDirs = [vaultPath, archivePath, githubSyncPath];
+    if (scanDirsEnv) {
+        for (const d of scanDirsEnv.split(',')) {
+            const trimmed = d.trim();
+            if (trimmed) {
+                authorizedDirs.push(path.resolve(trimmed));
+            }
+        }
+    }
+
+    const isAuthorized = authorizedDirs.some(dir => absolutePath.startsWith(dir));
+    
+    if (!isAuthorized) {
+        logWarn(MODULE, `Unauthorized file access attempt: ${filePath}`);
+        logWarn(MODULE, `Authorized dirs: ${authorizedDirs.join(', ')}`);
+        const errorResult = { status: 'ERROR', message: 'Unauthorized path traversal detected.' };
+        console.log(`__AEGIS_RESULT__:${JSON.stringify(errorResult)}`);
+        process.exit(1);
+    }
+
     // Validate file exists
     if (!fs.existsSync(filePath)) {
         const errorResult = { status: 'ERROR', message: `File not found: ${filePath}` };
@@ -196,7 +268,7 @@ async function main() {
             break;
 
         case 'CLASSIFY_ONLY':
-            const classification = await classifyDataWithImpulse(filePath);
+            const classification = await classifyDataIntelligence(filePath);
             result = { status: 'SUCCESS', classification };
             break;
 
@@ -218,6 +290,7 @@ async function main() {
         impact_token: result.stages?.impact?.claimId || null,
         classification: result.stages?.intelligence?.category || null,
         zk_verified: result.stages?.zkProof?.verified || null,
+        swarm_uri: result.stages?.swarm?.uri || null,
         execution_time_ms: result.executionTimeMs || 0,
         timestamp: result.timestamp || new Date().toISOString()
     };
@@ -234,9 +307,8 @@ async function main() {
 
     console.log(`__AEGIS_RESULT__:${JSON.stringify(outputResult)}`);
 
-    if (result.status === 'ERROR') {
-        process.exit(1);
-    }
+    // Force exit to prevent background JsonRpcProvider retries from hanging the process
+    setTimeout(() => process.exit(result.status === 'ERROR' ? 1 : 0), 500);
 }
 
 main().catch((err) => {

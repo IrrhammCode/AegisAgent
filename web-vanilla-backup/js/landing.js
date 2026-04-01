@@ -19,6 +19,7 @@ let walletState = {
 document.addEventListener('DOMContentLoaded', () => {
     initWalletModal();
     initNavScroll();
+    initParticles();
     checkExistingConnection();
 });
 
@@ -229,7 +230,7 @@ function showToast(message, type = 'info') {
 
 function initNavScroll() {
     const links = document.querySelectorAll('.nav-link');
-    const sections = ['features', 'pipeline', 'tech', 'architecture'];
+    const sections = ['how-it-works', 'features', 'tech', 'architecture'];
 
     window.addEventListener('scroll', () => {
         const scrollY = window.scrollY + 120;
@@ -242,5 +243,43 @@ function initNavScroll() {
                 if (active) active.classList.add('active');
             }
         }
+    });
+}
+
+// ─── Particle System ─────────────────────────────────────────
+
+function initParticles() {
+    const container = document.getElementById('particles');
+    if (!container) return;
+
+    const count = 30;
+    for (let i = 0; i < count; i++) {
+        createParticle(container);
+    }
+}
+
+function createParticle(container) {
+    const particle = document.createElement('div');
+    particle.className = 'particle';
+    
+    // Random position
+    const x = Math.random() * 100;
+    const duration = 10 + Math.random() * 20;
+    const delay = Math.random() * 10;
+    const size = 1 + Math.random() * 2;
+    const opacity = 0.1 + Math.random() * 0.3;
+
+    particle.style.left = `${x}%`;
+    particle.style.width = `${size}px`;
+    particle.style.height = `${size}px`;
+    particle.style.opacity = opacity;
+    particle.style.animationDuration = `${duration}s`;
+    particle.style.animationDelay = `-${delay}s`;
+
+    container.appendChild(particle);
+
+    // Re-create when animation ends
+    particle.addEventListener('animationiteration', () => {
+        particle.style.left = `${Math.random() * 100}%`;
     });
 }

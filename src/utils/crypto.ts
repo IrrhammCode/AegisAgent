@@ -9,9 +9,9 @@ import * as crypto from 'crypto';
 import * as fs from 'fs';
 
 /**
- * Computes SHA-256 hash of a string.
+ * Computes SHA-256 hash of a string or buffer.
  */
-export function sha256(data: string): string {
+export function sha256(data: string | Buffer): string {
     return crypto.createHash('sha256').update(data).digest('hex');
 }
 
@@ -42,6 +42,19 @@ export function hexToBytes32(hex: string): number[] {
 export function generateNonce(): string {
     return crypto.randomBytes(16).toString('hex');
 }
+
+/**
+ * Converts a string to a 32-byte number array.
+ */
+export function stringToBytes32(data: string | Buffer): number[] {
+    const buffer = typeof data === 'string' ? Buffer.from(data) : data;
+    const result = new Array(32).fill(0);
+    for (let i = 0; i < Math.min(buffer.length, 32); i++) {
+        result[i] = buffer[i];
+    }
+    return result;
+}
+
 
 /**
  * Computes HMAC-SHA256 given data and a key.

@@ -28,6 +28,8 @@ logs/
 *.key
 *.pem
 *.pkey
+.aegis_keyring.json
+scripts/demo_hypercert.ts
 
 # Local Data
 vault_data/
